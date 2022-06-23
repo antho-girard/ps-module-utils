@@ -45,6 +45,11 @@ trait TraitModuleExtended
     public function installModule(AbstractInstaller $installer)
     {
         try {
+            if (false === parent::install()) {
+                $installer->getLogger()->error('parent::install() returns false');
+
+                return false;
+            }
             $installer->runInstall();
         } catch (ExceptionList $list) {
             $exceptions = $list->getExceptions();

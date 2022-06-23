@@ -67,7 +67,7 @@ class OrderStateManager
      */
     public function createOrderState($moduleOrderState, $languages, $moduleName)
     {
-        $orderState = new OrderState();
+        $orderState = new OrderState((int) Configuration::getGlobalValue($moduleOrderState['configKey']));
         if (!Validate::isLoadedObject($orderState) || $orderState->deleted) {
             $this->logger->info(sprintf('Install order status %s', $moduleOrderState['configKey']));
             $orderState->hydrate($moduleOrderState);

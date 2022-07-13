@@ -80,11 +80,25 @@ abstract class AbstractSettingsLoader
     }
 
     /**
+     * @deprecated Use withContext() instead.
      * @param null|int $idShop
      * @param null|int $idShopGroup
      * @return AbstractSettings
      */
     public function setContext($idShop = null, $idShopGroup = null)
+    {
+        $this->idShop = (int) $idShop;
+        $this->idShopGroup = (int) $idShopGroup;
+
+        return $this->load();
+    }
+
+    /**
+     * @param int|null $idShop
+     * @param int|null $idShopGroup
+     * @return AbstractSettings
+     */
+    public function withContext($idShop = null, $idShopGroup = null)
     {
         $this->idShop = (int) $idShop;
         $this->idShopGroup = (int) $idShopGroup;

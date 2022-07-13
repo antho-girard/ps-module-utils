@@ -33,7 +33,7 @@ namespace AG\PSModuleUtils\Settings;
 abstract class AbstractSettings
 {
     /**
-     * @return AbstractSettings
+     * @return static
      */
     abstract public function postLoading();
 }

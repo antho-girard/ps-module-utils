@@ -30,6 +30,7 @@ use Symfony\Component\Serializer\Serializer;
 
 /**
  * Class AbstractSettingsLoader
+ * @template T of AbstractSettings
  * @package AG\PSModuleUtils\Settings
  */
 abstract class AbstractSettingsLoader
@@ -55,12 +56,12 @@ abstract class AbstractSettingsLoader
     }
 
     /**
-     * @return AbstractSettings
+     * @return T
      */
     abstract protected function deserialize();
 
     /**
-     * @return AbstractSettings
+     * @return T
      */
     public function load()
     {
@@ -83,7 +84,7 @@ abstract class AbstractSettingsLoader
      * @deprecated Use withContext() instead.
      * @param null|int $idShop
      * @param null|int $idShopGroup
-     * @return AbstractSettings
+     * @return T
      */
     public function setContext($idShop = null, $idShopGroup = null)
     {
@@ -96,7 +97,7 @@ abstract class AbstractSettingsLoader
     /**
      * @param int|null $idShop
      * @param int|null $idShopGroup
-     * @return AbstractSettings
+     * @return T
      */
     public function withContext($idShop = null, $idShopGroup = null)
     {

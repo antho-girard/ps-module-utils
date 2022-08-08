@@ -23,7 +23,7 @@ interface PresenterInterface
 {
     /**
      * @param mixed $object
-     * @return mixed[]
+     * @return mixed
      */
     public function present($object);
 }

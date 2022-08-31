@@ -61,10 +61,20 @@ abstract class AbstractLoggerFactory
     }
 
     /**
+     * @deprecated Use withChannel() instead.
      * @param string $channel
      * @return Logger
      */
     public function setChannel($channel)
+    {
+        return $this->logger->withName($channel);
+    }
+
+    /**
+     * @param string $channel
+     * @return Logger
+     */
+    public function withChannel($channel)
     {
         return $this->logger->withName($channel);
     }

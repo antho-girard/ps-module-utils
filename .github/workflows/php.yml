@@ -35,6 +35,8 @@ jobs:
           path: ~/.composer/cache
           key: php-composer-cache
 
+      - run: composer config platform.php 7.2.5
+
       - run: composer install
 
       - name: Pull PrestaShop files (Tag ${{ matrix.presta-versions }})

@@ -9,11 +9,6 @@
       "homepage": "https://github.com/antho-girard"
     }
   ],
-  "config": {
-    "platform": {
-      "php": "5.6.0"
-    }
-  },
   "autoload": {
     "psr-4": {
       "AG\\PSModuleUtils\\": "lib"

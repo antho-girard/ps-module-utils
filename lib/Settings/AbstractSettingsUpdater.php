@@ -101,6 +101,18 @@ abstract class AbstractSettingsUpdater
     }
 
     /**
+     * @param mixed $object
+     * @return AbstractSettings
+     * @throws ExceptionList
+     */
+    public function updateObject($object = null)
+    {
+        $array = $this->serializer->normalize($object);
+
+        return $this->update($array);
+    }
+
+    /**
      * @param mixed[] $array
      * @return void
      * @throws ExceptionList

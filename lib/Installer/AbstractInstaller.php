@@ -67,9 +67,6 @@ abstract class AbstractInstaller
 
     abstract public function checkTechnicalRequirements();
     abstract public function applyDefaultConfiguration();
-    abstract public function installTabs();
-    abstract public function installOrderStates();
-    abstract public function installCarriers();
 
     /**
      * @return void
@@ -138,5 +135,29 @@ abstract class AbstractInstaller
             $this->logger->info(sprintf('Register hook %s', $hook));
             $this->module->registerHook($hook);
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function installTabs()
+    {
+
+    }
+
+    /**
+     * @return void
+     */
+    public function installOrderStates()
+    {
+
+    }
+
+    /**
+     * @return void
+     */
+    public function installCarriers()
+    {
+
     }
 }

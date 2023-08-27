@@ -20,9 +20,6 @@
       "Tests\\AG\\PSModuleUtils\\": "tests/Unit/"
     }
   },
-  "bin": [
-    "binaries/ps-module-utils"
-  ],
   "require": {
     "php": "^5.6 || ^7.0",
     "ext-curl": "*",

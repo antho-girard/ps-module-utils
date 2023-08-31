@@ -27,7 +27,6 @@
     "monolog/monolog": "^2.9",
     "phpdocumentor/reflection-docblock": "^5.3",
     "prestashop/module-lib-service-container": "^2.0",
-    "symfony/console": "^4.4",
     "symfony/filesystem": "^4.4",
     "symfony/options-resolver": "^4.4",
     "symfony/property-access": "^4.4",

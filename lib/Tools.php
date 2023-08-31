@@ -27,6 +27,8 @@
 namespace AG\PSModuleUtils;
 
 use Symfony\Component\Filesystem\Filesystem;
+use RandomLib\Factory as RandomLib;
+use SecurityLib\Strength;
 
 /**
  * Class Tools
@@ -34,6 +36,8 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class Tools
 {
+    const RANDOM_STRING_CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
     /**
      * @param string $value
      * @return string
@@ -90,5 +94,17 @@ class Tools
         $cache[$idCurrency] = $currency->iso_code;
 
         return $currency->iso_code;
+    }
+
+    /**
+     * @param int $length
+     * @return string
+     */
+    public static function generateRandomString($length = 7)
+    {
+        $factory = new RandomLib();
+        $generator = $factory->getGenerator(new Strength(Strength::LOW));
+
+        return $generator->generateString($length, self::RANDOM_STRING_CHARS);
     }
 }

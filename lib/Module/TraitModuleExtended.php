@@ -28,6 +28,7 @@ namespace AG\PSModuleUtils\Module;
 
 use AG\PSModuleUtils\Exception\ExceptionList;
 use AG\PSModuleUtils\Installer\AbstractInstaller;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Trait TraitModuleExtended
@@ -108,6 +109,26 @@ trait TraitModuleExtended
     public function displayConfigurationPage($controllerName)
     {
         \Tools::redirectAdmin(\Context::getContext()->link->getAdminLink($controllerName));
+    }
+
+    /**
+     * @param string|null $env
+     * @return void
+     * @throws \PrestaShopException
+     */
+    public function removeSymfonyCache($env = null)
+    {
+        if (null === $env) {
+            $env = _PS_ENV_;
+        }
+
+        $dir = _PS_ROOT_DIR_ . '/var/cache/' . $env .'/';
+
+        register_shutdown_function(function () use ($dir) {
+            $fs = new Filesystem();
+            $fs->remove($dir);
+            \Hook::exec('actionClearSf2Cache');
+        });
     }
 
     /**

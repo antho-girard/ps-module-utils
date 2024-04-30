@@ -29,7 +29,7 @@ namespace AG\PSModuleUtils\Utils;
 use Alcohol\ISO4217;
 use Money\Currency;
 use Money\Money;
-use PrestaShop\Decimal\DecimalNumber;
+use PrestaShop\Decimal\Number;
 use PrestaShop\Decimal\Operation\Division;
 use PrestaShop\Decimal\Operation\Multiplication;
 use PrestaShop\Decimal\Operation\Rounding;
@@ -84,7 +84,7 @@ class AmountOfMoney
 
         $amountInSmallestUnit = \Tools::ps_round($amountInSmallestUnit);
         $division = new Division();
-        $amountComputed = $division->compute(new DecimalNumber((string) $amountInSmallestUnit), new DecimalNumber((string) $exp));
+        $amountComputed = $division->compute(new Number((string) $amountInSmallestUnit), new Number((string) $exp));
         $amount = $amountComputed->toPrecision($currencyDetails['exp'], Rounding::ROUND_HALF_UP);
 
         return new self((float) $amount, (int) $amountInSmallestUnit, $currencyDetails);
@@ -103,7 +103,7 @@ class AmountOfMoney
 
         $amountInStandardUnit = \Tools::ps_round($amountInStandardUnit, $currencyDetails['exp']);
         $multiplication = new Multiplication();
-        $amountComputed = $multiplication->compute(new DecimalNumber((string) $amountInStandardUnit), new DecimalNumber((string) $exp));
+        $amountComputed = $multiplication->compute(new Number((string) $amountInStandardUnit), new Number((string) $exp));
         $amount = $amountComputed->toPrecision(0);
 
         return new self($amountInStandardUnit, (int) $amount, $currencyDetails);

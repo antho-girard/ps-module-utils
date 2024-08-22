@@ -97,12 +97,13 @@ abstract class AbstractSettingsLoader
     /**
      * @param int|null $idShop
      * @param int|null $idShopGroup
+     * @param bool     $force
      * @return T
      */
-    public function withContext($idShop = null, $idShopGroup = null)
+    public function withContext($idShop = null, $idShopGroup = null, $force = false)
     {
-        $this->idShop = (int) $idShop;
-        $this->idShopGroup = (int) $idShopGroup;
+        $this->idShop = true === $force ? $idShop : \Context::getContext()->shop->id;
+        $this->idShopGroup = true === $force ? $idShopGroup : \Context::getContext()->shop->id_shop_group;
 
         return $this->load();
     }

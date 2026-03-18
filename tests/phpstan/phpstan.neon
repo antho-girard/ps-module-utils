@@ -8,6 +8,5 @@ parameters:
   level: 5
   ignoreErrors:
     - '#Parameter \#1 \$id of class Currency constructor expects null, int given.#'
-    -
-      identifier: trait.unused
+    - identifier: trait.unused
       path: ../../lib/Module/TraitModuleExtended.php

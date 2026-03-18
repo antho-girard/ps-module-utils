@@ -7,14 +7,21 @@
 
 ## Requirements
 
-| Package version           | PHP compatibility   | PrestaShop compatibility |
-|---------------------------|---------------------|--------------------------|
-| v0.x                      | PHP 5.6 or PHP 7.x  | PrestaShop 1.7.x         |
-| v1.x (soon to be release) | PHP 5.6 or PHP 7.x  | PrestaShop 1.7.x         |
-| v2.x                      | PHP 7.2+ or PHP 8.x | PrestaShop 8.x           |
+| Package version | PHP compatibility   | PrestaShop compatibility |
+|-----------------|---------------------|--------------------------|
+| v0.x (EOL)      | PHP 5.6 or PHP 7.x  | PrestaShop 1.7.x         |
+| v1.x (EOL)      | PHP 5.6 or PHP 7.x  | PrestaShop 1.7.x         |
+| v2.x            | PHP 7.2+ or PHP 8.x | PrestaShop 8.x           |
+| v3.x            | PHP 8.1+            | PrestaShop 9.x           |
 
 ## Installation
 ### Using Composer
+
+> ⚠️  **IMPORTANT**
+>
+> As of v2.2.0, Symfony dependencies are not included anymore as they are already embedded with PrestaShop.
+>
+
 You can install the library via [Composer](https://getcomposer.org/). If you don't already have Composer installed, first install it by following one of these instructions depends on your OS of choice:
 * [Composer installation instruction for Windows](https://getcomposer.org/doc/00-intro.md#installation-windows)
 * [Composer installation instruction for Mac OS X and Linux](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-osx)

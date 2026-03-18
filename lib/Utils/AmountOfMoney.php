@@ -184,4 +184,66 @@ class AmountOfMoney
 
         return self::fromSmallestUnit((float) $total->getAmount(), $currencyCode);
     }
+
+    /**
+     * @param AmountOfMoney $amount1
+     * @param AmountOfMoney $amount2
+     * @param string        $currencyCode
+     * @return AmountOfMoney
+     * @throws \PrestaShop\Decimal\Exception\DivisionByZeroException
+     */
+    public static function subtract(AmountOfMoney $amount1, AmountOfMoney $amount2, string $currencyCode): self
+    {
+        $currency = new Currency($currencyCode);
+        $total = new Money($amount1->getAmountInCents(), $currency);
+        $subtract = new Money($amount2->getAmountInCents(), $currency);
+        $result = $total->subtract($subtract);
+
+        return self::fromSmallestUnit((float) $result->getAmount(), $currencyCode);
+    }
+
+    /**
+     * Converts the current amount to a target currency by multiplying with the conversion rate.
+     *
+     * @param string    $targetCurrencyCode
+     * @param float|int $conversionRate
+     * @return AmountOfMoney
+     */
+    public function convertTo(string $targetCurrencyCode, $conversionRate): self
+    {
+        $iso4217 = new ISO4217();
+        $targetCurrencyDetails = $iso4217->getByCode($targetCurrencyCode);
+
+        $multiplication = new Multiplication();
+        $convertedAmount = $multiplication->compute(
+            new DecimalNumber((string) $this->amount),
+            new DecimalNumber((string) $conversionRate)
+        );
+        $convertedAmountRounded = $convertedAmount->toPrecision($targetCurrencyDetails['exp'], Rounding::ROUND_HALF_UP);
+
+        return self::fromStandardUnit((float) $convertedAmountRounded, $targetCurrencyCode);
+    }
+
+    /**
+     * Converts the current amount from a source currency by dividing with the conversion rate.
+     *
+     * @param string    $targetCurrencyCode
+     * @param float|int $conversionRate
+     * @return AmountOfMoney
+     * @throws \PrestaShop\Decimal\Exception\DivisionByZeroException
+     */
+    public function convertFrom(string $targetCurrencyCode, $conversionRate): self
+    {
+        $iso4217 = new ISO4217();
+        $targetCurrencyDetails = $iso4217->getByCode($targetCurrencyCode);
+
+        $division = new Division();
+        $convertedAmount = $division->compute(
+            new DecimalNumber((string) $this->amount),
+            new DecimalNumber((string) $conversionRate)
+        );
+        $convertedAmountRounded = $convertedAmount->toPrecision($targetCurrencyDetails['exp'], Rounding::ROUND_HALF_UP);
+
+        return self::fromStandardUnit((float) $convertedAmountRounded, $targetCurrencyCode);
+    }
 }

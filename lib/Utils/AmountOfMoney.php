@@ -61,7 +61,7 @@ class AmountOfMoney
      * @param int       $amountInCents
      * @param mixed[]   $currencyDetails
      */
-    private function __construct($amount, $amountInCents, $currencyDetails)
+    private function __construct($amount, int $amountInCents, array $currencyDetails)
     {
         $this->amount = (float) $amount;
         $this->amountInCents = (int) $amountInCents;
@@ -76,7 +76,7 @@ class AmountOfMoney
      * @return AmountOfMoney
      * @throws \PrestaShop\Decimal\Exception\DivisionByZeroException
      */
-    public static function fromSmallestUnit($amountInSmallestUnit, $currencyCode)
+    public static function fromSmallestUnit($amountInSmallestUnit, string $currencyCode): self
     {
         $iso4217 = new ISO4217();
         $currencyDetails = $iso4217->getByCode($currencyCode);
@@ -95,7 +95,7 @@ class AmountOfMoney
      * @param string    $currencyCode
      * @return AmountOfMoney
      */
-    public static function fromStandardUnit($amountInStandardUnit, $currencyCode)
+    public static function fromStandardUnit($amountInStandardUnit, string $currencyCode): self
     {
         $iso4217 = new ISO4217();
         $currencyDetails = $iso4217->getByCode($currencyCode);
@@ -112,7 +112,7 @@ class AmountOfMoney
     /**
      * @return float
      */
-    public function getAmount()
+    public function getAmount(): float
     {
         return (float) number_format($this->amount, $this->exp, '.', '');
     }
@@ -120,7 +120,7 @@ class AmountOfMoney
     /**
      * @return int
      */
-    public function getAmountInCents()
+    public function getAmountInCents(): int
     {
         return (int) $this->amountInCents;
     }
@@ -128,15 +128,15 @@ class AmountOfMoney
     /**
      * @return string
      */
-    public function getCurrencyCode()
+    public function getCurrencyCode(): string
     {
         return $this->currencyCode;
     }
 
     /**
-     * @return mixed|string
+     * @return string
      */
-    public function getCurrencyNumeric()
+    public function getCurrencyNumeric(): string
     {
         return $this->currencyNumeric;
     }
@@ -144,7 +144,7 @@ class AmountOfMoney
     /**
      * @return string
      */
-    public function formatPrice()
+    public function formatPrice(): string
     {
         return sprintf('%s %s', number_format($this->amount, $this->exp, '.', ''), $this->currencyCode);
     }
@@ -153,7 +153,7 @@ class AmountOfMoney
      * @param AmountOfMoney $otherAmountOfMoney
      * @return int
      */
-    public function compare(AmountOfMoney $otherAmountOfMoney)
+    public function compare(AmountOfMoney $otherAmountOfMoney): int
     {
         $moneyA = new Money($this->amountInCents, new Currency($this->currencyCode));
         $moneyB = new Money($otherAmountOfMoney->getAmountInCents(), new Currency($otherAmountOfMoney->getCurrencyCode()));
@@ -168,7 +168,7 @@ class AmountOfMoney
      * @return AmountOfMoney
      * @throws \PrestaShop\Decimal\Exception\DivisionByZeroException
      */
-    public static function sum(array $amounts, $currencyCode, $inSmallestUnit = false)
+    public static function sum(array $amounts, string $currencyCode, bool $inSmallestUnit = false): self
     {
         array_walk($amounts, function(&$item, $key, $args) {
             $item = $args['inSmallestUnit'] ? self::fromSmallestUnit($item, $args['currencyCode']) : self::fromStandardUnit($item, $args['currencyCode']);

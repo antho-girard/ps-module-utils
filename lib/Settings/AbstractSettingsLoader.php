@@ -26,6 +26,7 @@
 
 namespace AG\PSModuleUtils\Settings;
 
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Serializer;
 
 /**
@@ -58,12 +59,12 @@ abstract class AbstractSettingsLoader
     /**
      * @return T
      */
-    abstract protected function deserialize();
+    abstract protected function deserialize(): AbstractSettings;
 
     /**
      * @return T
      */
-    public function load()
+    public function load(): AbstractSettings
     {
         $settings = $this->deserialize();
 
@@ -72,8 +73,9 @@ abstract class AbstractSettingsLoader
 
     /**
      * @return mixed[]
+     * @throws ExceptionInterface
      */
-    public function normalize()
+    public function normalize(): array
     {
         $settings = $this->deserialize();
 
@@ -86,7 +88,7 @@ abstract class AbstractSettingsLoader
      * @param null|int $idShopGroup
      * @return T
      */
-    public function setContext($idShop = null, $idShopGroup = null)
+    public function setContext(?int $idShop = null, ?int $idShopGroup = null): AbstractSettings
     {
         $this->idShop = (int) $idShop;
         $this->idShopGroup = (int) $idShopGroup;
@@ -100,7 +102,7 @@ abstract class AbstractSettingsLoader
      * @param bool     $force
      * @return T
      */
-    public function withContext($idShop = null, $idShopGroup = null, $force = false)
+    public function withContext(?int $idShop = null, ?int $idShopGroup = null, bool $force = false): AbstractSettings
     {
         $this->idShop = true === $force ? $idShop : \Context::getContext()->shop->id;
         $this->idShopGroup = true === $force ? $idShopGroup : \Context::getContext()->shop->id_shop_group;

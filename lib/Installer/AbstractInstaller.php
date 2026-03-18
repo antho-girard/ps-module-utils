@@ -62,17 +62,17 @@ abstract class AbstractInstaller
     public function __construct(\Module $module, AbstractLoggerFactory $loggerFactory)
     {
         $this->module = $module;
-        $this->logger = $loggerFactory->setChannel('Installer');
+        $this->logger = $loggerFactory->withChannel('Installer');
     }
 
-    abstract public function checkTechnicalRequirements();
-    abstract public function applyDefaultConfiguration();
+    abstract public function checkTechnicalRequirements(): void;
+    abstract public function applyDefaultConfiguration(): void;
 
     /**
      * @return void
      * @throws \Exception
      */
-    public function runInstall()
+    public function runInstall(): void
     {
         $context = ['module_version' => $this->module->version, 'prestashop_version' => _PS_VERSION_];
         $this->logger->info('Start install process', $context);
@@ -90,7 +90,7 @@ abstract class AbstractInstaller
     /**
      * @return void
      */
-    public function runUninstall()
+    public function runUninstall(): void
     {
 
     }
@@ -98,7 +98,7 @@ abstract class AbstractInstaller
     /**
      * @return \Monolog\Logger
      */
-    public function getLogger()
+    public function getLogger(): \Monolog\Logger
     {
         return $this->logger;
     }
@@ -106,7 +106,7 @@ abstract class AbstractInstaller
     /**
      * @return void
      */
-    public function getYaml()
+    public function getYaml(): void
     {
         $parser = new Parser();
         $this->defaults = $parser->parse(file_get_contents($this->module->getLocalPath().'install/defaults.yml'));
@@ -116,7 +116,7 @@ abstract class AbstractInstaller
     /**
      * @return void
      */
-    public function installDb()
+    public function installDb(): void
     {
         $sqlLoader = new SqlLoader();
         $sqlLoader->setMetaData([
@@ -129,7 +129,7 @@ abstract class AbstractInstaller
     /**
      * @return void
      */
-    public function registerHooks()
+    public function registerHooks(): void
     {
         foreach ($this->defaults['hooks'] as $hook) {
             $this->logger->info(sprintf('Register hook %s', $hook));
@@ -140,7 +140,7 @@ abstract class AbstractInstaller
     /**
      * @return void
      */
-    public function installTabs()
+    public function installTabs(): void
     {
 
     }
@@ -148,7 +148,7 @@ abstract class AbstractInstaller
     /**
      * @return void
      */
-    public function installOrderStates()
+    public function installOrderStates(): void
     {
 
     }
@@ -156,7 +156,7 @@ abstract class AbstractInstaller
     /**
      * @return void
      */
-    public function installCarriers()
+    public function installCarriers(): void
     {
 
     }

@@ -36,5 +36,5 @@ interface ParameterResolverInterface
      * @param mixed[] $parameters
      * @return mixed
      */
-    public function resolve($parameters);
+    public function resolve(array $parameters);
 }

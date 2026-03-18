@@ -50,7 +50,7 @@ class CarrierManager
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
-    public function installCarriers($carriers, $moduleName)
+    public function installCarriers(array $carriers, string $moduleName): void
     {
         $languages = Language::getLanguages(false);
         foreach ($carriers as $carrier) {
@@ -76,7 +76,7 @@ class CarrierManager
      * @throws \PrestaShopException
      * @throws \Exception
      */
-    public function createCarrier($moduleCarrier, $languages, $moduleName)
+    public function createCarrier(array $moduleCarrier, array $languages, string $moduleName): Carrier
     {
         $carrier = new Carrier();
         $carrier->hydrate($moduleCarrier);
@@ -107,7 +107,7 @@ class CarrierManager
      * @param Logger $logger
      * @return void
      */
-    public function setLogger($logger)
+    public function setLogger(Logger $logger): void
     {
         $this->logger = $logger;
     }

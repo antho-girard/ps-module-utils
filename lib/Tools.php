@@ -42,7 +42,7 @@ class Tools
      * @param string $value
      * @return string
      */
-    public static function hash($value)
+    public static function hash(string $value): string
     {
         return md5(_COOKIE_IV_.$value);
     }
@@ -52,7 +52,7 @@ class Tools
      * @param string $destination
      * @return void
      */
-    public static function copy($source, $destination)
+    public static function copy(string $source, string $destination): void
     {
         $filesystem = new Filesystem();
         $filesystem->copy($source, $destination, true);
@@ -61,7 +61,7 @@ class Tools
     /**
      * @return mixed[]
      */
-    public static function getServerHttpHeaders()
+    public static function getServerHttpHeaders(): array
     {
         $headers = [];
         foreach ($_SERVER as $key => $value) {
@@ -80,7 +80,7 @@ class Tools
      * @param int $idCurrency
      * @return string
      */
-    public static function getIsoCurrencyCodeById($idCurrency)
+    public static function getIsoCurrencyCodeById(int $idCurrency): string
     {
         static $cache;
 
@@ -100,8 +100,12 @@ class Tools
      * @param int $length
      * @return string
      */
-    public static function generateRandomString($length = 7)
+    public static function generateRandomString(int $length = 7): string
     {
+        if ($length < 0) {
+            throw new \InvalidArgumentException('Length must be a non-negative integer');
+        }
+
         $factory = new RandomLib();
         $generator = $factory->getGenerator(new Strength(Strength::LOW));
 

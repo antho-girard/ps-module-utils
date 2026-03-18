@@ -65,7 +65,7 @@ abstract class AbstractLoggerFactory
      * @param string $channel
      * @return Logger
      */
-    public function setChannel($channel)
+    public function setChannel(string $channel): Logger
     {
         return $this->logger->withName($channel);
     }
@@ -74,7 +74,7 @@ abstract class AbstractLoggerFactory
      * @param string $channel
      * @return Logger
      */
-    public function withChannel($channel)
+    public function withChannel(string $channel): Logger
     {
         return $this->logger->withName($channel);
     }
@@ -82,7 +82,7 @@ abstract class AbstractLoggerFactory
     /**
      * @return Logger
      */
-    public function getLogger()
+    public function getLogger(): Logger
     {
         return $this->logger;
     }

@@ -36,5 +36,5 @@ interface ValidationDataInterface
      * @param mixed[] $array
      * @return mixed[]
      */
-    public function getValidationData($array);
+    public function getValidationData(array $array): array;
 }

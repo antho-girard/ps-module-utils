@@ -50,11 +50,11 @@ abstract class AbstractSettingsResolver implements ParameterResolverInterface
      * @param mixed[] $parameters
      * @return mixed[]|mixed
      */
-    abstract public function resolve($parameters);
+    abstract public function resolve(array $parameters);
 
     /**
      * @param OptionsResolver $resolver
-     * @return mixed
+     * @return void
      */
-    abstract public function configureOptions(OptionsResolver $resolver);
+    abstract public function configureOptions(OptionsResolver $resolver): void;
 }

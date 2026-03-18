@@ -89,7 +89,7 @@ abstract class AbstractSettingsUpdater
      * @return AbstractSettings
      * @throws ExceptionList
      */
-    public function update($array)
+    public function update(array $array): AbstractSettings
     {
         $array = $this->resolver->resolve($array);
         $this->validate($array);
@@ -103,9 +103,9 @@ abstract class AbstractSettingsUpdater
     /**
      * @param mixed $object
      * @return AbstractSettings
-     * @throws ExceptionList
+     * @throws ExceptionList|\Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function updateObject($object = null)
+    public function updateObject($object = null): AbstractSettings
     {
         $array = $this->serializer->normalize($object);
 
@@ -117,11 +117,10 @@ abstract class AbstractSettingsUpdater
      * @return void
      * @throws ExceptionList
      */
-    public function validate($array)
+    public function validate(array $array): void
     {
         $validationData = $this->validationData->getValidationData($array);
         $validator = Validation::createValidator();
-        /** @var Constraint[] $constraints */
         $constraints = new Collection($validationData['constraints']);
         $this->violations = $validator->validate($validationData['array'], $constraints);
         $exceptions = [];
@@ -139,7 +138,7 @@ abstract class AbstractSettingsUpdater
     /**
      * @return ConstraintViolationListInterface
      */
-    public function getViolations()
+    public function getViolations(): ConstraintViolationListInterface
     {
         return $this->violations;
     }
@@ -148,15 +147,15 @@ abstract class AbstractSettingsUpdater
      * @param mixed[] $array
      * @return mixed
      */
-    abstract protected function denormalize($array);
+    abstract protected function denormalize(array $array);
 
     /**
      * @return void
      */
-    abstract protected function serialize();
+    abstract protected function serialize(): void;
 
     /**
      * @return void
      */
-    abstract protected function save();
+    abstract protected function save(): void;
 }

@@ -43,7 +43,7 @@ trait TraitModuleExtended
      * @param AbstractInstaller $installer
      * @return bool
      */
-    public function installModule(AbstractInstaller $installer)
+    public function installModule(AbstractInstaller $installer): bool
     {
         try {
             if (false === parent::install()) {
@@ -83,7 +83,7 @@ trait TraitModuleExtended
      * @param AbstractInstaller $installer
      * @return bool
      */
-    public function uninstallModule(AbstractInstaller $installer)
+    public function uninstallModule(AbstractInstaller $installer): bool
     {
         try {
             $installer->runUninstall();
@@ -106,7 +106,7 @@ trait TraitModuleExtended
      * @param string $controllerName
      * @return void
      */
-    public function displayConfigurationPage($controllerName)
+    public function displayConfigurationPage(string $controllerName): void
     {
         \Tools::redirectAdmin(\Context::getContext()->link->getAdminLink($controllerName));
     }
@@ -116,7 +116,7 @@ trait TraitModuleExtended
      * @return void
      * @throws \PrestaShopException
      */
-    public function removeSymfonyCache($env = null)
+    public function removeSymfonyCache(?string $env = null): void
     {
         if (null === $env) {
             $env = _PS_ENV_;
@@ -135,7 +135,7 @@ trait TraitModuleExtended
      * @param string $serviceName
      * @return object|null
      */
-    public function getService($serviceName)
+    public function getService(string $serviceName): ?object
     {
         if ($this->serviceContainer === null) {
             $this->serviceContainer = new \PrestaShop\ModuleLibServiceContainer\DependencyInjection\ServiceContainer(

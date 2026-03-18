@@ -39,7 +39,7 @@ class ExceptionList extends \Exception
      * @param \Exception[] $exceptions
      * @return void
      */
-    public function setExceptions($exceptions)
+    public function setExceptions(array $exceptions): void
     {
         $this->exceptions = $exceptions;
     }
@@ -47,7 +47,7 @@ class ExceptionList extends \Exception
     /**
      * @return mixed[]
      */
-    public function getExceptionsMessages()
+    public function getExceptionsMessages(): array
     {
         $messages = [];
         foreach ($this->exceptions as $exception) {
@@ -60,7 +60,7 @@ class ExceptionList extends \Exception
     /**
      * @return \Exception[]
      */
-    public function getExceptions()
+    public function getExceptions(): array
     {
         return $this->exceptions;
     }

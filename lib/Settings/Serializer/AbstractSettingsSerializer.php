@@ -40,7 +40,7 @@ abstract class AbstractSettingsSerializer
     /**
      * @return Serializer
      */
-    public function getSerializer()
+    public function getSerializer(): Serializer
     {
         return $this->serializer;
     }

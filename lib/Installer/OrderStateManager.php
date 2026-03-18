@@ -49,7 +49,7 @@ class OrderStateManager
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
-    public function installOrderStates($orderStates, $moduleName)
+    public function installOrderStates(array $orderStates, string $moduleName): void
     {
         $languages = Language::getLanguages(false);
         foreach ($orderStates as $orderState) {
@@ -65,7 +65,7 @@ class OrderStateManager
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
-    public function createOrderState($moduleOrderState, $languages, $moduleName)
+    public function createOrderState(array $moduleOrderState, array $languages, string $moduleName): void
     {
         $orderState = new OrderState((int) Configuration::getGlobalValue($moduleOrderState['configKey']));
         if (!Validate::isLoadedObject($orderState) || $orderState->deleted) {
@@ -74,7 +74,7 @@ class OrderStateManager
             $orderState->module_name = pSQL($moduleName);
             $names = $moduleOrderState['names'];
             foreach ($languages as $language) {
-                $name = isset($names[$language['iso_code']]) ? $names[$language['iso_code']] : $names['en'];
+                $name = $names[$language['iso_code']] ?? $names['en'];
                 $orderState->name[(int) $language['id_lang']] = pSQL($name);
             }
             if ($orderState->save()) {
@@ -94,7 +94,7 @@ class OrderStateManager
      * @param Logger $logger
      * @return void
      */
-    public function setLogger($logger)
+    public function setLogger(Logger $logger): void
     {
         $this->logger = $logger;
     }

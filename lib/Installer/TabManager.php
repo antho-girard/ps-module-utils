@@ -46,7 +46,7 @@ class TabManager
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
-    public function installTabs($tabs, $moduleName)
+    public function installTabs(array $tabs, string $moduleName): void
     {
         foreach ($tabs as $tab) {
             $this->logger->info(sprintf('Install tab %s', $tab['className']));
@@ -62,7 +62,7 @@ class TabManager
      * @throws \PrestaShopException
      * @throws \Exception
      */
-    public function createTab($moduleTab, $moduleName)
+    public function createTab(array $moduleTab, string $moduleName): void
     {
         if (Tab::getIdFromClassName($moduleTab['className'])) {
             return;
@@ -76,7 +76,7 @@ class TabManager
         $names = $moduleTab['names'];
         foreach (Language::getLanguages() as $lang) {
             $isoCode = $lang['iso_code'];
-            $tabName = isset($names[$isoCode]) ? $names[$isoCode] : $names['en'];
+            $tabName = $names[$isoCode] ?? $names['en'];
             $tab->name[$lang['id_lang']] = pSQL($tabName);
         }
 
@@ -89,7 +89,7 @@ class TabManager
      * @param Logger $logger
      * @return void
      */
-    public function setLogger($logger)
+    public function setLogger(Logger $logger): void
     {
         $this->logger = $logger;
     }

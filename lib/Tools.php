@@ -30,42 +30,26 @@ use Symfony\Component\Filesystem\Filesystem;
 use RandomLib\Factory as RandomLib;
 use SecurityLib\Strength;
 
-/**
- * Class Tools
- * @package AG\PSModuleUtils
- */
 class Tools
 {
-    const RANDOM_STRING_CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    public const RANDOM_STRING_CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-    /**
-     * @param string $value
-     * @return string
-     */
     public static function hash(string $value): string
     {
         return md5(_COOKIE_IV_.$value);
     }
 
-    /**
-     * @param string $source
-     * @param string $destination
-     * @return void
-     */
     public static function copy(string $source, string $destination): void
     {
         $filesystem = new Filesystem();
         $filesystem->copy($source, $destination, true);
     }
 
-    /**
-     * @return mixed[]
-     */
     public static function getServerHttpHeaders(): array
     {
         $headers = [];
         foreach ($_SERVER as $key => $value) {
-            if (substr($key, 0, 5) !== 'HTTP_') {
+            if (!str_starts_with($key, 'HTTP_')) {
                 continue;
             }
             $header = str_replace(' ', '-', ucwords(str_replace('_', ' ', strtolower(substr($key, 5)))));
@@ -77,8 +61,6 @@ class Tools
 
     /**
      * Use this method to insure compatibility with earlier versions of PrestaShop
-     * @param int $idCurrency
-     * @return string
      */
     public static function getIsoCurrencyCodeById(int $idCurrency): string
     {
@@ -96,10 +78,6 @@ class Tools
         return $currency->iso_code;
     }
 
-    /**
-     * @param int $length
-     * @return string
-     */
     public static function generateRandomString(int $length = 7): string
     {
         if ($length < 0) {
@@ -113,13 +91,9 @@ class Tools
     }
 
     /**
-     * @param int      $idModule
-     * @param int      $idLang
-     * @param int|null $idShop
-     * @return mixed[]
      * @throws \PrestaShopDatabaseException
      */
-    public static function getPaymentCurrencies(int $idModule, int $idLang, int $idShop = null): array
+    public static function getPaymentCurrencies(int $idModule, int $idLang, ?int $idShop = null): array
     {
         if (null === $idShop) {
             $idShop = \Context::getContext()->shop->id;
@@ -143,13 +117,9 @@ class Tools
     }
 
     /**
-     * @param int      $idModule
-     * @param int      $idLang
-     * @param int|null $idShop
-     * @return mixed[]
      * @throws \PrestaShopDatabaseException
      */
-    public static function getPaymentCountries(int $idModule, int $idLang, int $idShop = null): array
+    public static function getPaymentCountries(int $idModule, int $idLang, ?int $idShop = null): array
     {
         if (null === $idShop) {
             $idShop = \Context::getContext()->shop->id;
@@ -170,16 +140,12 @@ class Tools
             return [];
         }
         $idList = array_column((array) $results, 'id_country');
-        $filtered = array_filter($enabledCountries, function ($item) use ($idList) {
-            return in_array($item['id_country'], $idList);
-        });
+        $filtered = array_filter($enabledCountries, fn($item) => in_array($item['id_country'], $idList));
 
         return $filtered ?: [];
     }
 
     /**
-     * @param int $cartId
-     * @return \Order
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      */

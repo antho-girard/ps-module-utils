@@ -26,21 +26,9 @@
 
 namespace AG\PSModuleUtils\Settings\Validation;
 
-/**
- * Class AbstractValidationData
- * @package AG\PSModuleUtils\Settings\Validation
- */
 abstract class AbstractValidationData implements ValidationDataInterface
 {
-    /** @var \Module $module */
-    protected $module;
-
-    /**
-     * AbstractValidationData constructor.
-     * @param \Module $module
-     */
-    public function __construct(\Module $module)
+    public function __construct(protected \Module $module)
     {
-        $this->module = $module;
     }
 }

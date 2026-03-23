@@ -31,21 +31,13 @@ use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
 use AG\PSModuleUtils\Tools;
 
-/**
- * Class AbstractLoggerFactory
- * @package AG\PSModuleUtils\Logger
- */
 abstract class AbstractLoggerFactory
 {
-    /** @var Logger $logger */
-    private $logger;
+    private readonly Logger $logger;
 
-    abstract public function getLoggerLevel();
-    abstract public function getLogFilePath();
+    abstract public function getLoggerLevel(): mixed;
+    abstract public function getLogFilePath(): string;
 
-    /**
-     *
-     */
     public function __construct()
     {
         $this->logger = new Logger('module');
@@ -62,26 +54,17 @@ abstract class AbstractLoggerFactory
 
     /**
      * @deprecated Use withChannel() instead.
-     * @param string $channel
-     * @return Logger
      */
     public function setChannel(string $channel): Logger
     {
         return $this->logger->withName($channel);
     }
 
-    /**
-     * @param string $channel
-     * @return Logger
-     */
     public function withChannel(string $channel): Logger
     {
         return $this->logger->withName($channel);
     }
 
-    /**
-     * @return Logger
-     */
     public function getLogger(): Logger
     {
         return $this->logger;

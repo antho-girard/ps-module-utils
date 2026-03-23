@@ -30,63 +30,25 @@ use AG\PSModuleUtils\Exception\ExceptionList;
 use AG\PSModuleUtils\Settings\OptionsResolver\AbstractSettingsResolver;
 use AG\PSModuleUtils\Settings\Validation\AbstractValidationData;
 use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validation;
 
-/**
- * Class AbstractSettingsUpdater
- * @package AG\PSModuleUtils\Settings
- */
 abstract class AbstractSettingsUpdater
 {
-    /** @var Serializer $serializer */
-    protected $serializer;
+    protected string $json;
+    private ConstraintViolationListInterface $violations;
 
-    /** @var AbstractSettingsResolver $resolver */
-    protected $resolver;
-
-    /** @var AbstractValidationData $validationData */
-    protected $validationData;
-
-    /** @var AbstractSettings $settings */
-    protected $settings;
-
-    /** @var \Module $module */
-    protected $module;
-
-    /** @var string $json */
-    protected $json;
-
-    /** @var ConstraintViolationListInterface $violations */
-    private $violations;
-
-    /**
-     * SettingsUpdater constructor.
-     * @param Serializer               $serializer
-     * @param AbstractSettingsResolver $resolver
-     * @param AbstractSettings         $settings
-     * @param AbstractValidationData   $validationData
-     * @param \Module                  $module
-     */
     public function __construct(
-        Serializer $serializer,
-        AbstractSettingsResolver $resolver,
-        AbstractSettings $settings,
-        AbstractValidationData $validationData,
-        \Module $module
+        protected Serializer $serializer,
+        protected AbstractSettingsResolver $resolver,
+        protected AbstractSettings $settings,
+        protected AbstractValidationData $validationData,
+        protected \Module $module
     ) {
-        $this->serializer = $serializer;
-        $this->resolver = $resolver;
-        $this->settings = $settings;
-        $this->validationData = $validationData;
-        $this->module = $module;
     }
 
     /**
-     * @param mixed[] $array
-     * @return AbstractSettings
      * @throws ExceptionList
      */
     public function update(array $array): AbstractSettings
@@ -101,11 +63,9 @@ abstract class AbstractSettingsUpdater
     }
 
     /**
-     * @param mixed $object
-     * @return AbstractSettings
      * @throws ExceptionList|\Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function updateObject($object = null): AbstractSettings
+    public function updateObject(mixed $object = null): AbstractSettings
     {
         $array = $this->serializer->normalize($object);
 
@@ -113,8 +73,6 @@ abstract class AbstractSettingsUpdater
     }
 
     /**
-     * @param mixed[] $array
-     * @return void
      * @throws ExceptionList
      */
     public function validate(array $array): void
@@ -135,27 +93,14 @@ abstract class AbstractSettingsUpdater
         }
     }
 
-    /**
-     * @return ConstraintViolationListInterface
-     */
     public function getViolations(): ConstraintViolationListInterface
     {
         return $this->violations;
     }
 
-    /**
-     * @param mixed[] $array
-     * @return mixed
-     */
-    abstract protected function denormalize(array $array);
+    abstract protected function denormalize(array $array): void;
 
-    /**
-     * @return void
-     */
     abstract protected function serialize(): void;
 
-    /**
-     * @return void
-     */
     abstract protected function save(): void;
 }

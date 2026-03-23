@@ -28,18 +28,10 @@ namespace AG\PSModuleUtils\Settings\Serializer;
 
 use Symfony\Component\Serializer\Serializer;
 
-/**
- * Class AbstractSettingsSerializer
- * @package AG\PSModuleUtils\Settings\Serializer
- */
 abstract class AbstractSettingsSerializer
 {
-    /** @var Serializer $serializer */
-    protected $serializer;
+    protected Serializer $serializer;
 
-    /**
-     * @return Serializer
-     */
     public function getSerializer(): Serializer
     {
         return $this->serializer;

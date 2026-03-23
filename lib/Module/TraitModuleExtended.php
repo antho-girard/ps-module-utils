@@ -30,19 +30,10 @@ use AG\PSModuleUtils\Exception\ExceptionList;
 use AG\PSModuleUtils\Installer\AbstractInstaller;
 use Symfony\Component\Filesystem\Filesystem;
 
-/**
- * Trait TraitModuleExtended
- * @package AG\PSModuleUtils\Module
- */
 trait TraitModuleExtended
 {
-    /** @var \PrestaShop\ModuleLibServiceContainer\DependencyInjection\ServiceContainer $serviceContainer */
-    protected $serviceContainer;
+    protected ?\PrestaShop\ModuleLibServiceContainer\DependencyInjection\ServiceContainer $serviceContainer = null;
 
-    /**
-     * @param AbstractInstaller $installer
-     * @return bool
-     */
     public function installModule(AbstractInstaller $installer): bool
     {
         try {
@@ -79,10 +70,6 @@ trait TraitModuleExtended
         return true;
     }
 
-    /**
-     * @param AbstractInstaller $installer
-     * @return bool
-     */
     public function uninstallModule(AbstractInstaller $installer): bool
     {
         try {
@@ -102,18 +89,12 @@ trait TraitModuleExtended
         return true;
     }
 
-    /**
-     * @param string $controllerName
-     * @return void
-     */
     public function displayConfigurationPage(string $controllerName): void
     {
         \Tools::redirectAdmin(\Context::getContext()->link->getAdminLink($controllerName));
     }
 
     /**
-     * @param string|null $env
-     * @return void
      * @throws \PrestaShopException
      */
     public function removeSymfonyCache(?string $env = null): void
@@ -131,10 +112,6 @@ trait TraitModuleExtended
         });
     }
 
-    /**
-     * @param string $serviceName
-     * @return object|null
-     */
     public function getService(string $serviceName): ?object
     {
         if ($this->serviceContainer === null) {

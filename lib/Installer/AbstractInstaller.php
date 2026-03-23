@@ -30,38 +30,16 @@ use AG\PSModuleUtils\Logger\AbstractLoggerFactory;
 use PrestaShopBundle\Install\SqlLoader;
 use Symfony\Component\Yaml\Parser;
 
-/**
- * Class AbstractInstaller
- * @package AG\PSModuleUtils\Installer
- */
 abstract class AbstractInstaller
 {
-    /** @var \Module $module */
-    protected $module;
+    protected \Monolog\Logger $logger;
+    protected array $defaults;
+    protected TabManager $tabManager;
+    protected OrderStateManager $orderStateManager;
+    protected CarrierManager $carrierManager;
 
-    /** @var \Monolog\Logger $logger */
-    protected $logger;
-
-    /** @var mixed[] $defaults */
-    protected $defaults;
-
-    /** @var TabManager $tabManager */
-    protected $tabManager;
-
-    /** @var OrderStateManager $orderStateManager */
-    protected $orderStateManager;
-
-    /** @var CarrierManager $carrierManager */
-    protected $carrierManager;
-
-    /**
-     * AbstractInstaller constructor.
-     * @param \Module               $module
-     * @param AbstractLoggerFactory $loggerFactory
-     */
-    public function __construct(\Module $module, AbstractLoggerFactory $loggerFactory)
+    public function __construct(protected \Module $module, AbstractLoggerFactory $loggerFactory)
     {
-        $this->module = $module;
         $this->logger = $loggerFactory->withChannel('Installer');
     }
 
@@ -69,7 +47,6 @@ abstract class AbstractInstaller
     abstract public function applyDefaultConfiguration(): void;
 
     /**
-     * @return void
      * @throws \Exception
      */
     public function runInstall(): void
@@ -87,25 +64,16 @@ abstract class AbstractInstaller
         $this->logger->info('Install process finished with success');
     }
 
-    /**
-     * @return void
-     */
     public function runUninstall(): void
     {
 
     }
 
-    /**
-     * @return \Monolog\Logger
-     */
     public function getLogger(): \Monolog\Logger
     {
         return $this->logger;
     }
 
-    /**
-     * @return void
-     */
     public function getYaml(): void
     {
         $parser = new Parser();
@@ -113,9 +81,6 @@ abstract class AbstractInstaller
         $this->logger->info('YAML file parsed');
     }
 
-    /**
-     * @return void
-     */
     public function installDb(): void
     {
         $sqlLoader = new SqlLoader();
@@ -126,9 +91,6 @@ abstract class AbstractInstaller
         $this->logger->info('Database updated');
     }
 
-    /**
-     * @return void
-     */
     public function registerHooks(): void
     {
         foreach ($this->defaults['hooks'] as $hook) {
@@ -137,25 +99,16 @@ abstract class AbstractInstaller
         }
     }
 
-    /**
-     * @return void
-     */
     public function installTabs(): void
     {
 
     }
 
-    /**
-     * @return void
-     */
     public function installOrderStates(): void
     {
 
     }
 
-    /**
-     * @return void
-     */
     public function installCarriers(): void
     {
 

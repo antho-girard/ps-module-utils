@@ -28,33 +28,17 @@ namespace AG\PSModuleUtils\Settings\OptionsResolver;
 
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * Class AbstractSettingsResolver
- * @package AG\PSModuleUtils\Settings\OptionsResolver
- */
 abstract class AbstractSettingsResolver implements ParameterResolverInterface
 {
-    /** @var OptionsResolver $resolver */
-    protected $resolver;
+    protected readonly OptionsResolver $resolver;
 
-    /**
-     * AbstractSettingsResolver constructor.
-     */
     public function __construct()
     {
         $this->resolver = new OptionsResolver();
         $this->configureOptions($this->resolver);
     }
 
-    /**
-     * @param mixed[] $parameters
-     * @return mixed[]|mixed
-     */
-    abstract public function resolve(array $parameters);
+    abstract public function resolve(array $parameters): mixed;
 
-    /**
-     * @param OptionsResolver $resolver
-     * @return void
-     */
     abstract public function configureOptions(OptionsResolver $resolver): void;
 }

@@ -26,15 +26,7 @@
 
 namespace AG\PSModuleUtils\Settings\OptionsResolver;
 
-/**
- * Interface ParameterResolverInterface
- * @package AG\PSModuleUtils\Settings\OptionsResolver
- */
 interface ParameterResolverInterface
 {
-    /**
-     * @param mixed[] $parameters
-     * @return mixed
-     */
-    public function resolve(array $parameters);
+    public function resolve(array $parameters): mixed;
 }

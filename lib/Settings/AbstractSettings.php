@@ -26,14 +26,7 @@
 
 namespace AG\PSModuleUtils\Settings;
 
-/**
- * Class AbstractSettings
- * @package AG\PSModuleUtils\Settings
- */
 abstract class AbstractSettings
 {
-    /**
-     * @return static
-     */
-    abstract public function postLoading();
+    abstract public function postLoading(): static;
 }

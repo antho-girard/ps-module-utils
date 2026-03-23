@@ -30,19 +30,11 @@ use Language;
 use Monolog\Logger;
 use Tab;
 
-/**
- * Class TabManager
- * @package AG\PSModuleUtils\Installer
- */
 class TabManager
 {
-    /** @var Logger $logger */
-    private $logger;
+    private Logger $logger;
 
     /**
-     * @param mixed[] $tabs
-     * @param string  $moduleName
-     * @return void
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
@@ -55,9 +47,6 @@ class TabManager
     }
 
     /**
-     * @param mixed[] $moduleTab
-     * @param string  $moduleName
-     * @return void
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      * @throws \Exception
@@ -85,10 +74,6 @@ class TabManager
         }
     }
 
-    /**
-     * @param Logger $logger
-     * @return void
-     */
     public function setLogger(Logger $logger): void
     {
         $this->logger = $logger;

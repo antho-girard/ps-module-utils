@@ -33,19 +33,11 @@ use Monolog\Logger;
 use OrderState;
 use Validate;
 
-/**
- * Class OrderStatusManager
- * @package AG\PSModuleUtils\Installer
- */
 class OrderStateManager
 {
-    /** @var Logger $logger */
-    private $logger;
+    private Logger $logger;
 
     /**
-     * @param mixed[] $orderStates
-     * @param string  $moduleName
-     * @return void
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
@@ -58,10 +50,6 @@ class OrderStateManager
     }
 
     /**
-     * @param mixed[] $moduleOrderState
-     * @param mixed[] $languages
-     * @param string  $moduleName
-     * @return void
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
@@ -90,10 +78,6 @@ class OrderStateManager
         }
     }
 
-    /**
-     * @param Logger $logger
-     * @return void
-     */
     public function setLogger(Logger $logger): void
     {
         $this->logger = $logger;

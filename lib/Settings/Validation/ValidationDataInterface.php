@@ -26,15 +26,7 @@
 
 namespace AG\PSModuleUtils\Settings\Validation;
 
-/**
- * Interface ValidationDataInterface
- * @package AG\PSModuleUtils\Settings\Validation
- */
 interface ValidationDataInterface
 {
-    /**
-     * @param mixed[] $array
-     * @return mixed[]
-     */
     public function getValidationData(array $array): array;
 }

@@ -15,15 +15,7 @@
 
 namespace AG\PSModuleUtils\Presenter;
 
-/**
- * Interface PresenterInterface
- * @package AG\PSModuleUtils\Presenter
- */
 interface PresenterInterface
 {
-    /**
-     * @param mixed $object
-     * @return mixed
-     */
-    public function present($object);
+    public function present(mixed $object): mixed;
 }

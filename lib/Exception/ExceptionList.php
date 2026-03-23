@@ -26,27 +26,15 @@
 
 namespace AG\PSModuleUtils\Exception;
 
-/**
- * Class ExceptionList
- * @package AG\PSModuleUtils\Exception
- */
 class ExceptionList extends \Exception
 {
-    /** @var \Exception[] $exceptions */
-    private $exceptions;
+    private array $exceptions;
 
-    /**
-     * @param \Exception[] $exceptions
-     * @return void
-     */
     public function setExceptions(array $exceptions): void
     {
         $this->exceptions = $exceptions;
     }
 
-    /**
-     * @return mixed[]
-     */
     public function getExceptionsMessages(): array
     {
         $messages = [];
@@ -57,9 +45,6 @@ class ExceptionList extends \Exception
         return $messages;
     }
 
-    /**
-     * @return \Exception[]
-     */
     public function getExceptions(): array
     {
         return $this->exceptions;

@@ -34,19 +34,11 @@ use AG\PSModuleUtils\Tools;
 use Monolog\Logger;
 use Validate;
 
-/**
- * Class CarrierManager
- * @package AG\PSModuleUtils\Installer
- */
 class CarrierManager
 {
-    /** @var Logger $logger */
-    private $logger;
+    private Logger $logger;
 
     /**
-     * @param mixed[] $carriers
-     * @param string  $moduleName
-     * @return void
      * @throws \PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
@@ -69,10 +61,6 @@ class CarrierManager
     }
 
     /**
-     * @param mixed[] $moduleCarrier
-     * @param mixed[] $languages
-     * @param string  $moduleName
-     * @return Carrier
      * @throws \PrestaShopException
      * @throws \Exception
      */
@@ -103,10 +91,6 @@ class CarrierManager
         return $carrier;
     }
 
-    /**
-     * @param Logger $logger
-     * @return void
-     */
     public function setLogger(Logger $logger): void
     {
         $this->logger = $logger;

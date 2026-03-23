@@ -30,30 +30,15 @@ use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Serializer;
 
 /**
- * Class AbstractSettingsLoader
  * @template T of AbstractSettings
- * @package AG\PSModuleUtils\Settings
  */
 abstract class AbstractSettingsLoader
 {
-    /** @var Serializer $serializer */
-    protected $serializer;
+    protected ?int $idShop = null;
+    protected ?int $idShopGroup = null;
 
-    /** @var null|int $idShop */
-    protected $idShop;
-
-    /** @var null|int $idShopGroup */
-    protected $idShopGroup;
-
-    /**
-     * SettingsLoader constructor.
-     * @param Serializer $serializer
-     */
-    public function __construct(Serializer $serializer)
+    public function __construct(protected readonly Serializer $serializer)
     {
-        $this->serializer = $serializer;
-        $this->idShop = null;
-        $this->idShopGroup = null;
     }
 
     /**
@@ -72,7 +57,6 @@ abstract class AbstractSettingsLoader
     }
 
     /**
-     * @return mixed[]
      * @throws ExceptionInterface
      */
     public function normalize(): array
@@ -84,8 +68,6 @@ abstract class AbstractSettingsLoader
 
     /**
      * @deprecated Use withContext() instead.
-     * @param null|int $idShop
-     * @param null|int $idShopGroup
      * @return T
      */
     public function setContext(?int $idShop = null, ?int $idShopGroup = null): AbstractSettings
@@ -97,9 +79,6 @@ abstract class AbstractSettingsLoader
     }
 
     /**
-     * @param int|null $idShop
-     * @param int|null $idShopGroup
-     * @param bool     $force
      * @return T
      */
     public function withContext(?int $idShop = null, ?int $idShopGroup = null, bool $force = false): AbstractSettings

@@ -65,7 +65,7 @@ class ToolsTest extends TestCase
     public function testHashReturnsValidMd5(): void
     {
         $result = Tools::hash('test_value');
-        $this->assertRegExp('/^[a-f0-9]{32}$/', $result);
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $result);
     }
 
     /**

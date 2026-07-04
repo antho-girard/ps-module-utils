@@ -26,52 +26,103 @@
 
 namespace AG\PSModuleUtils\Installer;
 
-use Language;
+use AG\PSModuleUtils\Installer\Tab\PrestaShopTabGateway;
+use AG\PSModuleUtils\Installer\Tab\TabDefinition;
+use AG\PSModuleUtils\Installer\Tab\TabGatewayInterface;
 use Monolog\Logger;
-use Tab;
 
+/**
+ * Installs/removes back-office tabs (menu entries and, above all, the permission entries needed by
+ * #[AdminSecurity]). Depends only on TabGatewayInterface, so its logic is unit-testable; the actual
+ * PrestaShop Tab persistence lives in the injected gateway.
+ *
+ * A tab bound to a Symfony admin controller MUST carry its `routeName`; `className` must equal the
+ * route's `_legacy_controller` and the value checked by `#[AdminSecurity]`. Use `visible => false`
+ * for a permission-only, menu-less tab.
+ *
+ * Expected tab shape (e.g. from install/defaults.yml key "menus"):
+ *   [
+ *     'className'       => 'AdminMyModuleConfigure',   // required; = route _legacy_controller
+ *     'routeName'       => 'admin_mymodule_configure', // required for a Symfony controller tab
+ *     'parentClassName' => 'IMPROVE',                  // optional; menu section
+ *     'visible'         => false,                       // optional (default true)
+ *     'icon'            => 'settings',                  // optional
+ *     'wording'         => 'Configure',                 // optional; translation key
+ *     'wordingDomain'   => 'Modules.Mymodule.Admin',    // optional; translation domain
+ *     'names'           => ['en' => 'Configure', 'fr' => 'Configurer'], // optional per-lang name
+ *   ]
+ */
 class TabManager
 {
-    private Logger $logger;
+    private ?Logger $logger = null;
+
+    public function __construct(private readonly TabGatewayInterface $gateway)
+    {
+    }
 
     /**
-     * @throws \PrestaShopDatabaseException
-     * @throws \PrestaShopException
+     * Convenience factory wiring the default PrestaShop adapter.
+     */
+    public static function create(): self
+    {
+        return new self(new PrestaShopTabGateway());
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $tabs
      */
     public function installTabs(array $tabs, string $moduleName): void
     {
         foreach ($tabs as $tab) {
-            $this->logger->info(sprintf('Install tab %s', $tab['className']));
-            $this->createTab($tab, $moduleName);
+            try {
+                $this->createTab($tab, $moduleName);
+            } catch (\Throwable $e) {
+                // A single menu failure must not abort the whole install: log and carry on.
+                $this->logger?->error(sprintf(
+                    'Failed to install tab %s: %s',
+                    $tab['className'] ?? '(unknown)',
+                    $e->getMessage()
+                ));
+            }
         }
     }
 
     /**
-     * @throws \PrestaShopDatabaseException
-     * @throws \PrestaShopException
-     * @throws \Exception
+     * @param array<string, mixed> $moduleTab
      */
     public function createTab(array $moduleTab, string $moduleName): void
     {
-        if (Tab::getIdFromClassName($moduleTab['className'])) {
+        if (null !== $this->gateway->findIdByClassName($moduleTab['className'])) {
             return;
         }
-        $tab = new Tab();
-        $tab->class_name = pSQL($moduleTab['className']);
-        $tab->module = pSQL($moduleName);
-        $tab->id_parent = (int) Tab::getIdFromClassName($moduleTab['parentClassName']);
-        $tab->active = true;
-        $tab->name = [];
-        $names = $moduleTab['names'];
-        foreach (Language::getLanguages() as $lang) {
-            $isoCode = $lang['iso_code'];
-            $tabName = $names[$isoCode] ?? $names['en'];
-            $tab->name[$lang['id_lang']] = pSQL($tabName);
+
+        $this->logger?->info(sprintf('Install tab %s', $moduleTab['className']));
+
+        $parentId = null;
+        if (!empty($moduleTab['parentClassName'])) {
+            $parentId = $this->gateway->findIdByClassName($moduleTab['parentClassName']);
         }
 
-        if (!$tab->add()) {
-            throw new \Exception('Cannot add menu.');
+        $this->gateway->create(new TabDefinition(
+            className: $moduleTab['className'],
+            moduleName: $moduleName,
+            parentId: $parentId,
+            routeName: $moduleTab['routeName'] ?? null,
+            active: (bool) ($moduleTab['visible'] ?? true),
+            icon: $moduleTab['icon'] ?? null,
+            wording: $moduleTab['wording'] ?? null,
+            wordingDomain: $moduleTab['wordingDomain'] ?? null,
+            names: $moduleTab['names'] ?? []
+        ));
+    }
+
+    public function uninstallTab(string $className): void
+    {
+        if (null === $this->gateway->findIdByClassName($className)) {
+            return;
         }
+        $this->logger?->info(sprintf('Uninstall tab %s', $className));
+        $this->gateway->delete($className);
     }
 
     public function setLogger(Logger $logger): void

@@ -26,69 +26,78 @@
 
 namespace AG\PSModuleUtils\Installer;
 
-use Carrier;
-use Configuration;
-use Context;
-use Language;
-use AG\PSModuleUtils\Tools;
+use AG\PSModuleUtils\Installer\Carrier\CarrierDefinition;
+use AG\PSModuleUtils\Installer\Carrier\CarrierGatewayInterface;
+use AG\PSModuleUtils\Installer\Carrier\PrestaShopCarrierGateway;
 use Monolog\Logger;
-use Validate;
 
+/**
+ * Installs carriers idempotently. Depends only on CarrierGatewayInterface, so its logic is
+ * unit-testable; PrestaShop persistence lives in the injected gateway.
+ *
+ * Scope: the carrier, its delays, logo and config key. Groups/zones/price ranges are the module's
+ * responsibility (business-specific).
+ *
+ * Expected carrier shape (e.g. from install/defaults.yml key "carriers"):
+ *   [
+ *     'configKey' => 'MYMODULE_CARRIER_ID',          // required; global config key holding the id
+ *     'delays'    => ['en' => 'Delivery', 'fr' => 'Livraison'],
+ *     'name' => 'My carrier', 'is_module' => true, 'shipping_external' => true, ...  // Carrier fields
+ *   ]
+ */
 class CarrierManager
 {
-    private Logger $logger;
+    private ?Logger $logger = null;
+
+    public function __construct(private readonly CarrierGatewayInterface $gateway)
+    {
+    }
 
     /**
-     * @throws \PrestaShopDatabaseException
-     * @throws \PrestaShopException
+     * Convenience factory wiring the default PrestaShop adapter.
+     */
+    public static function create(): self
+    {
+        return new self(new PrestaShopCarrierGateway());
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $carriers
      */
     public function installCarriers(array $carriers, string $moduleName): void
     {
-        $languages = Language::getLanguages(false);
         foreach ($carriers as $carrier) {
-            $idCarrier = Configuration::getGlobalValue($carrier['configKey']);
-            $oldCarrier = Carrier::getCarrierByReference((int) $idCarrier);
-            if ($oldCarrier !== false &&
-                Validate::isLoadedObject($oldCarrier) &&
-                $oldCarrier->external_module_name == $moduleName
-            ) {
-                $this->logger->info('Carrier already exists');
-                continue;
+            try {
+                $this->createCarrier($carrier, $moduleName);
+            } catch (\Throwable $e) {
+                $this->logger?->error(sprintf(
+                    'Failed to install carrier %s: %s',
+                    $carrier['configKey'] ?? '(unknown)',
+                    $e->getMessage()
+                ));
             }
-            $this->logger->info(sprintf('Install carrier %s', $carrier['configKey']));
-            $this->createCarrier($carrier, $languages, $moduleName);
         }
     }
 
     /**
-     * @throws \PrestaShopException
-     * @throws \Exception
+     * @param array<string, mixed> $moduleCarrier
      */
-    public function createCarrier(array $moduleCarrier, array $languages, string $moduleName): Carrier
+    public function createCarrier(array $moduleCarrier, string $moduleName): void
     {
-        $carrier = new Carrier();
-        $carrier->hydrate($moduleCarrier);
-        foreach ($languages as $language) {
-            if (isset($moduleCarrier['delays'][$language['iso_code']])) {
-                $carrier->delay[(int) $language['id_lang']] = $moduleCarrier['delays'][$language['iso_code']];
-            } else {
-                $carrier->delay[(int) $language['id_lang']] = $moduleCarrier['delays']['en'];
-            }
+        if ($this->gateway->existsForModule($moduleCarrier['configKey'], $moduleName)) {
+            $this->logger?->info(sprintf('Carrier %s already exists', $moduleCarrier['configKey']));
+
+            return;
         }
 
-        if (!$carrier->save()) {
-            throw new \Exception('Cannot create carrier');
-        }
-        if (\Tools::version_compare(_PS_VERSION_, '1.7', '>=')) {
-            $logoPath = _PS_MODULE_DIR_.$moduleName.'/views/img/carrier_icon_17.png';
-        } else {
-            $logoPath = _PS_MODULE_DIR_.$moduleName.'/views/img/carrier_icon.png';
-        }
-        Tools::copy($logoPath, _PS_SHIP_IMG_DIR_.(int) $carrier->id.'.jpg');
-        Tools::copy($logoPath, _PS_TMP_IMG_DIR_.'carrier_mini_'.(int) $carrier->id.'_'.Context::getContext()->language->id.'.png');
-        Configuration::updateGlobalValue($moduleCarrier['configKey'], $carrier->id);
+        $this->logger?->info(sprintf('Install carrier %s', $moduleCarrier['configKey']));
 
-        return $carrier;
+        $this->gateway->create(new CarrierDefinition(
+            configKey: $moduleCarrier['configKey'],
+            moduleName: $moduleName,
+            delays: $moduleCarrier['delays'] ?? [],
+            attributes: $moduleCarrier
+        ));
     }
 
     public function setLogger(Logger $logger): void

@@ -24,16 +24,27 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings;
+namespace AG\PSModuleUtils\Installer\Tab;
 
-abstract class AbstractSettings
+/**
+ * Immutable, framework-agnostic description of a back-office tab to create.
+ * Built by TabManager (unit-testable) and consumed by a TabGatewayInterface adapter.
+ */
+final class TabDefinition
 {
     /**
-     * Hook run after loading, for derived/runtime values. Override when needed;
-     * the default is a no-op so simple settings classes stay boilerplate-free.
+     * @param array<string, string> $names iso code => name (fallback to 'en' then class name)
      */
-    public function postLoading(): static
-    {
-        return $this;
+    public function __construct(
+        public readonly string $className,
+        public readonly string $moduleName,
+        public readonly ?int $parentId = null,
+        public readonly ?string $routeName = null,
+        public readonly bool $active = true,
+        public readonly ?string $icon = null,
+        public readonly ?string $wording = null,
+        public readonly ?string $wordingDomain = null,
+        public readonly array $names = []
+    ) {
     }
 }

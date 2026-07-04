@@ -26,56 +26,77 @@
 
 namespace AG\PSModuleUtils\Installer;
 
-use Configuration;
-use Language;
-use AG\PSModuleUtils\Tools;
+use AG\PSModuleUtils\Installer\OrderState\OrderStateDefinition;
+use AG\PSModuleUtils\Installer\OrderState\OrderStateGatewayInterface;
+use AG\PSModuleUtils\Installer\OrderState\PrestaShopOrderStateGateway;
 use Monolog\Logger;
-use OrderState;
-use Validate;
 
+/**
+ * Installs order states idempotently. Depends only on OrderStateGatewayInterface, so its logic is
+ * unit-testable; PrestaShop persistence lives in the injected gateway.
+ *
+ * Expected order-state shape (e.g. from install/defaults.yml key "orderStatuses"):
+ *   [
+ *     'configKey' => 'MYMODULE_STATE_ID',           // required; global config key holding the id
+ *     'names'     => ['en' => 'Paid', 'fr' => 'Payé'],
+ *     'logo'      => 'icon.gif',                      // optional; file in views/img/icons/
+ *     'color' => '#01B887', 'send_email' => 0, ...    // any OrderState field (hydrated)
+ *   ]
+ */
 class OrderStateManager
 {
-    private Logger $logger;
+    private ?Logger $logger = null;
+
+    public function __construct(private readonly OrderStateGatewayInterface $gateway)
+    {
+    }
 
     /**
-     * @throws \PrestaShopDatabaseException
-     * @throws \PrestaShopException
+     * Convenience factory wiring the default PrestaShop adapter.
+     */
+    public static function create(): self
+    {
+        return new self(new PrestaShopOrderStateGateway());
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $orderStates
      */
     public function installOrderStates(array $orderStates, string $moduleName): void
     {
-        $languages = Language::getLanguages(false);
         foreach ($orderStates as $orderState) {
-            $this->createOrderState($orderState, $languages, $moduleName);
+            try {
+                $this->createOrderState($orderState, $moduleName);
+            } catch (\Throwable $e) {
+                $this->logger?->error(sprintf(
+                    'Failed to install order state %s: %s',
+                    $orderState['configKey'] ?? '(unknown)',
+                    $e->getMessage()
+                ));
+            }
         }
     }
 
     /**
-     * @throws \PrestaShopDatabaseException
-     * @throws \PrestaShopException
+     * @param array<string, mixed> $moduleOrderState
      */
-    public function createOrderState(array $moduleOrderState, array $languages, string $moduleName): void
+    public function createOrderState(array $moduleOrderState, string $moduleName): void
     {
-        $orderState = new OrderState((int) Configuration::getGlobalValue($moduleOrderState['configKey']));
-        if (!Validate::isLoadedObject($orderState) || $orderState->deleted) {
-            $this->logger->info(sprintf('Install order status %s', $moduleOrderState['configKey']));
-            $orderState->hydrate($moduleOrderState);
-            $orderState->module_name = pSQL($moduleName);
-            $names = $moduleOrderState['names'];
-            foreach ($languages as $language) {
-                $name = $names[$language['iso_code']] ?? $names['en'];
-                $orderState->name[(int) $language['id_lang']] = pSQL($name);
-            }
-            if ($orderState->save()) {
-                if ($moduleOrderState['logo']) {
-                    $source = realpath(_PS_MODULE_DIR_.$moduleName.'/views/img/icons/'.$moduleOrderState['logo']);
-                    $destination = _PS_ROOT_DIR_.'/img/os/'.(int) $orderState->id.'.gif';
-                    Tools::copy($source, $destination);
-                }
-                Configuration::updateGlobalValue($moduleOrderState['configKey'], (int) $orderState->id);
-            }
-        } else {
-            $this->logger->info(sprintf('Order status %s already exists', $moduleOrderState['configKey']));
+        if ($this->gateway->exists($moduleOrderState['configKey'])) {
+            $this->logger?->info(sprintf('Order status %s already exists', $moduleOrderState['configKey']));
+
+            return;
         }
+
+        $this->logger?->info(sprintf('Install order status %s', $moduleOrderState['configKey']));
+
+        $this->gateway->create(new OrderStateDefinition(
+            configKey: $moduleOrderState['configKey'],
+            moduleName: $moduleName,
+            names: $moduleOrderState['names'] ?? [],
+            logo: $moduleOrderState['logo'] ?? null,
+            attributes: $moduleOrderState
+        ));
     }
 
     public function setLogger(Logger $logger): void

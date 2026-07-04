@@ -24,9 +24,30 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings\Validation;
+namespace AG\PSModuleUtils\Logger;
 
-interface ValidationDataInterface
+/**
+ * Locates a module's rotating log files on disk. Pure (no Monolog/PrestaShop) so it is fully
+ * unit-testable; used by AbstractLoggerFactory::getLogFiles() to offer BO download links.
+ */
+final class LogFileLocator
 {
-    public function getValidationData(array $array): array;
+    /**
+     * Most recent log files for a module, newest first, capped at $limit. Matches the rotating
+     * handler naming "{date}_{moduleName}.log" (the fixed-width date prefix makes reverse string
+     * order chronological).
+     *
+     * @return list<string> absolute file paths
+     */
+    public static function locate(string $directory, string $moduleName, int $limit = 3): array
+    {
+        $files = glob(rtrim($directory, '/') . '/*_' . $moduleName . '.log');
+        if (false === $files) {
+            return [];
+        }
+
+        rsort($files);
+
+        return array_slice($files, 0, max(0, $limit));
+    }
 }

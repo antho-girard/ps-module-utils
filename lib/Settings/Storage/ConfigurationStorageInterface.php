@@ -24,16 +24,24 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings;
+namespace AG\PSModuleUtils\Settings\Storage;
 
-abstract class AbstractSettings
+/**
+ * Port for reading/writing raw JSON config values, keyed and shop-scoped.
+ *
+ * The settings core depends only on this interface (no PrestaShop type), which keeps it
+ * unit-testable with an in-memory double. PrestaShopConfigurationStorage is the sole
+ * adapter bridging it to the native ShopConfigurationInterface / ShopConstraint.
+ *
+ * Shop scope is expressed with primitive ids (kept framework-agnostic here); the adapter
+ * maps them to a ShopConstraint. A null id targets the current/all-shops context per the
+ * adapter's policy.
+ */
+interface ConfigurationStorageInterface
 {
-    /**
-     * Hook run after loading, for derived/runtime values. Override when needed;
-     * the default is a no-op so simple settings classes stay boilerplate-free.
-     */
-    public function postLoading(): static
-    {
-        return $this;
-    }
+    public function get(string $key, ?int $idShop = null, ?int $idShopGroup = null): ?string;
+
+    public function set(string $key, string $value, ?int $idShop = null, ?int $idShopGroup = null): void;
+
+    public function has(string $key, ?int $idShop = null, ?int $idShopGroup = null): bool;
 }

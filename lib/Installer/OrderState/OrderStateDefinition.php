@@ -24,16 +24,26 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings\Serializer;
+namespace AG\PSModuleUtils\Installer\OrderState;
 
-use Symfony\Component\Serializer\Serializer;
-
-abstract class AbstractSettingsSerializer
+/**
+ * Immutable, framework-agnostic description of an order state to create. Built by
+ * OrderStateManager (unit-testable) and consumed by an OrderStateGatewayInterface adapter.
+ */
+final class OrderStateDefinition
 {
-    protected Serializer $serializer;
-
-    public function getSerializer(): Serializer
-    {
-        return $this->serializer;
+    /**
+     * @param array<string, string> $names      iso code => name (fallback to 'en' then '')
+     * @param array<string, mixed>  $attributes raw OrderState fields to hydrate (color, send_email,
+     *                                           invoice, logable, paid, shipped, …); non-fields are
+     *                                           ignored by ObjectModel::hydrate()
+     */
+    public function __construct(
+        public readonly string $configKey,
+        public readonly string $moduleName,
+        public readonly array $names,
+        public readonly ?string $logo = null,
+        public readonly array $attributes = []
+    ) {
     }
 }

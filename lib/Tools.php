@@ -27,8 +27,6 @@
 namespace AG\PSModuleUtils;
 
 use Symfony\Component\Filesystem\Filesystem;
-use RandomLib\Factory as RandomLib;
-use SecurityLib\Strength;
 
 class Tools
 {
@@ -59,35 +57,19 @@ class Tools
         return $headers;
     }
 
-    /**
-     * Use this method to insure compatibility with earlier versions of PrestaShop
-     */
-    public static function getIsoCurrencyCodeById(int $idCurrency): string
-    {
-        static $cache;
-
-        if (isset($cache[$idCurrency])) {
-            return $cache[$idCurrency];
-        }
-        $currency = new \Currency((int) $idCurrency);
-        if (!\Validate::isLoadedObject($currency)) {
-            return '';
-        }
-        $cache[$idCurrency] = $currency->iso_code;
-
-        return $currency->iso_code;
-    }
-
     public static function generateRandomString(int $length = 7): string
     {
         if ($length < 0) {
             throw new \InvalidArgumentException('Length must be a non-negative integer');
         }
 
-        $factory = new RandomLib();
-        $generator = $factory->getGenerator(new Strength(Strength::LOW));
+        $max = strlen(self::RANDOM_STRING_CHARS) - 1;
+        $result = '';
+        for ($i = 0; $i < $length; ++$i) {
+            $result .= self::RANDOM_STRING_CHARS[random_int(0, $max)];
+        }
 
-        return $generator->generateString($length, self::RANDOM_STRING_CHARS);
+        return $result;
     }
 
     /**
@@ -143,20 +125,5 @@ class Tools
         $filtered = array_filter($enabledCountries, fn($item) => in_array($item['id_country'], $idList));
 
         return $filtered ?: [];
-    }
-
-    /**
-     * @throws \PrestaShopDatabaseException
-     * @throws \PrestaShopException
-     */
-    public static function getOrderByCartId(int $cartId): \Order
-    {
-        $dbQuery = (new \DbQuery())
-            ->select('id_order')
-            ->from('orders')
-            ->where('id_cart = '.(int) $cartId);
-        $idOrder = \Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($dbQuery);
-
-        return new \Order((int) $idOrder);
     }
 }

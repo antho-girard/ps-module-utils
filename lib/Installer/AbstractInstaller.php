@@ -87,7 +87,7 @@ abstract class AbstractInstaller
         $sqlLoader->setMetaData([
             'PREFIX_' => _DB_PREFIX_,
         ]);
-        $sqlLoader->parse_file($this->module->getLocalPath().'install/install.sql');
+        $sqlLoader->parseFile($this->module->getLocalPath().'install/install.sql');
         $this->logger->info('Database updated');
     }
 

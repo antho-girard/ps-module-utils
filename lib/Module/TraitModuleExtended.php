@@ -28,12 +28,9 @@ namespace AG\PSModuleUtils\Module;
 
 use AG\PSModuleUtils\Exception\ExceptionList;
 use AG\PSModuleUtils\Installer\AbstractInstaller;
-use Symfony\Component\Filesystem\Filesystem;
 
 trait TraitModuleExtended
 {
-    protected ?\PrestaShop\ModuleLibServiceContainer\DependencyInjection\ServiceContainer $serviceContainer = null;
-
     public function installModule(AbstractInstaller $installer): bool
     {
         try {
@@ -95,32 +92,13 @@ trait TraitModuleExtended
     }
 
     /**
-     * @throws \PrestaShopException
+     * Clears the Symfony cache after the current request, delegating to the native
+     * Tools::clearSf2Cache() (which also dispatches the actionClearSf2Cache hook).
      */
     public function removeSymfonyCache(?string $env = null): void
     {
-        if (null === $env) {
-            $env = _PS_ENV_;
-        }
-
-        $dir = _PS_ROOT_DIR_ . '/var/cache/' . $env .'/';
-
-        register_shutdown_function(function () use ($dir) {
-            $fs = new Filesystem();
-            $fs->remove($dir);
-            \Hook::exec('actionClearSf2Cache');
+        register_shutdown_function(static function () use ($env): void {
+            \Tools::clearSf2Cache($env);
         });
-    }
-
-    public function getService(string $serviceName): ?object
-    {
-        if ($this->serviceContainer === null) {
-            $this->serviceContainer = new \PrestaShop\ModuleLibServiceContainer\DependencyInjection\ServiceContainer(
-                $this->name . str_replace('.', '', $this->version),
-                $this->getLocalPath()
-            );
-        }
-
-        return $this->serviceContainer->getService($serviceName);
     }
 }

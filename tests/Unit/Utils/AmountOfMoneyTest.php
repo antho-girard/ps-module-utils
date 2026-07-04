@@ -34,7 +34,7 @@ class AmountOfMoneyTest extends TestCase
     {
         $amount = AmountOfMoney::fromStandardUnit(10.50, 'EUR');
 
-        $this->assertEquals(1050, $amount->getAmountInCents());
+        $this->assertEquals(1050, $amount->getMinorUnits());
     }
 
     /**
@@ -59,7 +59,7 @@ class AmountOfMoneyTest extends TestCase
         $amount = AmountOfMoney::fromStandardUnit(0, 'EUR');
 
         $this->assertEquals(0.00, $amount->getAmount());
-        $this->assertEquals(0, $amount->getAmountInCents());
+        $this->assertEquals(0, $amount->getMinorUnits());
     }
 
     /**
@@ -72,7 +72,7 @@ class AmountOfMoneyTest extends TestCase
         $amount = AmountOfMoney::fromStandardUnit(100, 'EUR');
 
         $this->assertEquals(100.00, $amount->getAmount());
-        $this->assertEquals(10000, $amount->getAmountInCents());
+        $this->assertEquals(10000, $amount->getMinorUnits());
     }
 
     // ========== fromSmallestUnit() tests ==========
@@ -98,7 +98,7 @@ class AmountOfMoneyTest extends TestCase
     {
         $amount = AmountOfMoney::fromSmallestUnit(1050, 'EUR');
 
-        $this->assertEquals(1050, $amount->getAmountInCents());
+        $this->assertEquals(1050, $amount->getMinorUnits());
     }
 
     /**
@@ -111,7 +111,7 @@ class AmountOfMoneyTest extends TestCase
         $amount = AmountOfMoney::fromSmallestUnit(0, 'EUR');
 
         $this->assertEquals(0.00, $amount->getAmount());
-        $this->assertEquals(0, $amount->getAmountInCents());
+        $this->assertEquals(0, $amount->getMinorUnits());
     }
 
     // ========== getCurrencyNumeric() tests ==========
@@ -228,11 +228,14 @@ class AmountOfMoneyTest extends TestCase
      */
     public function testSumAddsAmountsInStandardUnit(): void
     {
-        $amounts = [10.00, 20.00, 5.50];
-        $total = AmountOfMoney::sum($amounts, 'EUR', false);
+        $total = AmountOfMoney::sum(
+            AmountOfMoney::fromStandardUnit(10.00, 'EUR'),
+            AmountOfMoney::fromStandardUnit(20.00, 'EUR'),
+            AmountOfMoney::fromStandardUnit(5.50, 'EUR')
+        );
 
         $this->assertEquals(35.50, $total->getAmount());
-        $this->assertEquals(3550, $total->getAmountInCents());
+        $this->assertEquals(3550, $total->getMinorUnits());
     }
 
     /**
@@ -242,24 +245,27 @@ class AmountOfMoneyTest extends TestCase
      */
     public function testSumAddsAmountsInSmallestUnit(): void
     {
-        $amounts = [1000, 2000, 550];
-        $total = AmountOfMoney::sum($amounts, 'EUR', true);
+        $total = AmountOfMoney::sum(
+            AmountOfMoney::fromSmallestUnit(1000, 'EUR'),
+            AmountOfMoney::fromSmallestUnit(2000, 'EUR'),
+            AmountOfMoney::fromSmallestUnit(550, 'EUR')
+        );
 
         $this->assertEquals(35.50, $total->getAmount());
-        $this->assertEquals(3550, $total->getAmountInCents());
+        $this->assertEquals(3550, $total->getMinorUnits());
     }
 
     /**
-     * Tests that sum handles empty array.
+     * Tests that zero() returns an empty amount (an empty sum is no longer supported).
      *
      * @return void
      */
-    public function testSumHandlesEmptyArray(): void
+    public function testZeroReturnsEmptyAmount(): void
     {
-        $total = AmountOfMoney::sum([], 'EUR', false);
+        $zero = AmountOfMoney::zero('EUR');
 
-        $this->assertEquals(0.00, $total->getAmount());
-        $this->assertEquals(0, $total->getAmountInCents());
+        $this->assertEquals(0.00, $zero->getAmount());
+        $this->assertEquals(0, $zero->getMinorUnits());
     }
 
     /**
@@ -269,7 +275,7 @@ class AmountOfMoneyTest extends TestCase
      */
     public function testSumHandlesSingleAmount(): void
     {
-        $total = AmountOfMoney::sum([10.50], 'EUR', false);
+        $total = AmountOfMoney::sum(AmountOfMoney::fromStandardUnit(10.50, 'EUR'));
 
         $this->assertEquals(10.50, $total->getAmount());
     }
@@ -286,7 +292,7 @@ class AmountOfMoneyTest extends TestCase
         $amount = AmountOfMoney::fromStandardUnit(10.500, 'BHD');
 
         $this->assertEquals(10.500, $amount->getAmount());
-        $this->assertEquals(10500, $amount->getAmountInCents());
+        $this->assertEquals(10500, $amount->getMinorUnits());
     }
 
     /**
@@ -313,10 +319,10 @@ class AmountOfMoneyTest extends TestCase
         $amount1 = AmountOfMoney::fromStandardUnit(100.00, 'EUR');
         $amount2 = AmountOfMoney::fromStandardUnit(30.00, 'EUR');
 
-        $result = AmountOfMoney::subtract($amount1, $amount2, 'EUR');
+        $result = $amount1->subtract($amount2);
 
         $this->assertEquals(70.00, $result->getAmount());
-        $this->assertEquals(7000, $result->getAmountInCents());
+        $this->assertEquals(7000, $result->getMinorUnits());
     }
 
     /**
@@ -329,7 +335,7 @@ class AmountOfMoneyTest extends TestCase
         $amount1 = AmountOfMoney::fromStandardUnit(100.00, 'EUR');
         $amount2 = AmountOfMoney::fromStandardUnit(30.00, 'EUR');
 
-        $result = AmountOfMoney::subtract($amount1, $amount2, 'EUR');
+        $result = $amount1->subtract($amount2);
 
         $this->assertEquals('EUR', $result->getCurrencyCode());
     }
@@ -344,10 +350,10 @@ class AmountOfMoneyTest extends TestCase
         $amount1 = AmountOfMoney::fromStandardUnit(50.00, 'EUR');
         $amount2 = AmountOfMoney::fromStandardUnit(50.00, 'EUR');
 
-        $result = AmountOfMoney::subtract($amount1, $amount2, 'EUR');
+        $result = $amount1->subtract($amount2);
 
         $this->assertEquals(0.00, $result->getAmount());
-        $this->assertEquals(0, $result->getAmountInCents());
+        $this->assertEquals(0, $result->getMinorUnits());
     }
 
     /**
@@ -360,7 +366,7 @@ class AmountOfMoneyTest extends TestCase
         $amount1 = AmountOfMoney::fromStandardUnit(100.50, 'EUR');
         $amount2 = AmountOfMoney::fromStandardUnit(30.25, 'EUR');
 
-        $result = AmountOfMoney::subtract($amount1, $amount2, 'EUR');
+        $result = $amount1->subtract($amount2);
 
         $this->assertEquals(70.25, $result->getAmount());
     }
@@ -375,10 +381,10 @@ class AmountOfMoneyTest extends TestCase
         $amount1 = AmountOfMoney::fromStandardUnit(30.00, 'EUR');
         $amount2 = AmountOfMoney::fromStandardUnit(100.00, 'EUR');
 
-        $result = AmountOfMoney::subtract($amount1, $amount2, 'EUR');
+        $result = $amount1->subtract($amount2);
 
         $this->assertEquals(-70.00, $result->getAmount());
-        $this->assertEquals(-7000, $result->getAmountInCents());
+        $this->assertEquals(-7000, $result->getMinorUnits());
     }
 
     /**
@@ -391,7 +397,7 @@ class AmountOfMoneyTest extends TestCase
         $amount1 = AmountOfMoney::fromStandardUnit(1000, 'JPY');
         $amount2 = AmountOfMoney::fromStandardUnit(300, 'JPY');
 
-        $result = AmountOfMoney::subtract($amount1, $amount2, 'JPY');
+        $result = $amount1->subtract($amount2);
 
         $this->assertEquals(700, $result->getAmount());
     }
@@ -410,7 +416,7 @@ class AmountOfMoneyTest extends TestCase
         $converted = $amount->convertTo('USD', 1.20);
 
         $this->assertEquals(120.00, $converted->getAmount());
-        $this->assertEquals(12000, $converted->getAmountInCents());
+        $this->assertEquals(12000, $converted->getMinorUnits());
     }
 
     /**
@@ -453,7 +459,7 @@ class AmountOfMoneyTest extends TestCase
         $converted = $amount->convertTo('JPY', 130.50);
 
         $this->assertEquals(1305, $converted->getAmount());
-        $this->assertEquals(1305, $converted->getAmountInCents());
+        $this->assertEquals(1305, $converted->getMinorUnits());
     }
 
     /**
@@ -554,7 +560,7 @@ class AmountOfMoneyTest extends TestCase
         $converted = $amount->convertFrom('EUR', 1.20);
 
         $this->assertEquals(100.00, $converted->getAmount());
-        $this->assertEquals(10000, $converted->getAmountInCents());
+        $this->assertEquals(10000, $converted->getMinorUnits());
     }
 
     /**

@@ -96,7 +96,8 @@ $RECYCLE.BIN/
 !/upload/.htaccess
 
 /vendor/*
-/docs/phpdoc-sf/
+# Internal planning docs (architecture, ADRs, backlog, testing notes) — kept out of versioning.
+/docs/
 /composer.lock
 *.hot-update.js
 *.hot-update.json

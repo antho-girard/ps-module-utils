@@ -24,9 +24,25 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings\OptionsResolver;
+namespace AG\PSModuleUtils\Settings\Exception;
 
-interface ParameterResolverInterface
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+
+/**
+ * Thrown when settings fail validation. Carries the full ConstraintViolationList so callers
+ * keep the property paths and translatable messages (form rendering, upgrade scripts, logs).
+ */
+final class SettingsValidationException extends \RuntimeException
 {
-    public function resolve(array $parameters): mixed;
+    public function __construct(
+        private readonly ConstraintViolationListInterface $violations,
+        string $message = 'Settings validation failed'
+    ) {
+        parent::__construct($message);
+    }
+
+    public function getViolations(): ConstraintViolationListInterface
+    {
+        return $this->violations;
+    }
 }

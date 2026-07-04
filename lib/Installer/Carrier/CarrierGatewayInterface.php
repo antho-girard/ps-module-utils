@@ -24,11 +24,21 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings\Validation;
+namespace AG\PSModuleUtils\Installer\Carrier;
 
-abstract class AbstractValidationData implements ValidationDataInterface
+/**
+ * Port for carrier persistence. Keeps CarrierManager free of PrestaShop's Carrier ObjectModel and
+ * static Carrier/Configuration/Validate/Context calls, so its logic stays unit-testable.
+ */
+interface CarrierGatewayInterface
 {
-    public function __construct(protected \Module $module)
-    {
-    }
+    /**
+     * @return bool true if a carrier already exists for this module (by stored reference)
+     */
+    public function existsForModule(string $configKey, string $moduleName): bool;
+
+    /**
+     * @throws \Throwable when the carrier cannot be persisted (caught by the manager)
+     */
+    public function create(CarrierDefinition $carrier): void;
 }

@@ -24,16 +24,25 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings;
+namespace AG\PSModuleUtils\Installer\Carrier;
 
-abstract class AbstractSettings
+/**
+ * Immutable, framework-agnostic description of a carrier to create. Built by CarrierManager
+ * (unit-testable) and consumed by a CarrierGatewayInterface adapter.
+ */
+final class CarrierDefinition
 {
     /**
-     * Hook run after loading, for derived/runtime values. Override when needed;
-     * the default is a no-op so simple settings classes stay boilerplate-free.
+     * @param array<string, string> $delays     iso code => delay label (fallback to 'en' then '')
+     * @param array<string, mixed>  $attributes raw Carrier fields to hydrate (name, active,
+     *                                           shipping_external, is_module, range_behavior, …);
+     *                                           non-fields are ignored by ObjectModel::hydrate()
      */
-    public function postLoading(): static
-    {
-        return $this;
+    public function __construct(
+        public readonly string $configKey,
+        public readonly string $moduleName,
+        public readonly array $delays,
+        public readonly array $attributes = []
+    ) {
     }
 }

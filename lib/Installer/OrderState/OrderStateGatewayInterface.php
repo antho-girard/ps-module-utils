@@ -24,21 +24,21 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings\OptionsResolver;
+namespace AG\PSModuleUtils\Installer\OrderState;
 
-use Symfony\Component\OptionsResolver\OptionsResolver;
-
-abstract class AbstractSettingsResolver implements ParameterResolverInterface
+/**
+ * Port for order-state persistence. Keeps OrderStateManager free of PrestaShop's OrderState
+ * ObjectModel and static Configuration/Validate calls, so its logic stays unit-testable.
+ */
+interface OrderStateGatewayInterface
 {
-    protected readonly OptionsResolver $resolver;
+    /**
+     * @return bool true if a loaded, non-deleted order state is already stored under this config key
+     */
+    public function exists(string $configKey): bool;
 
-    public function __construct()
-    {
-        $this->resolver = new OptionsResolver();
-        $this->configureOptions($this->resolver);
-    }
-
-    abstract public function resolve(array $parameters): mixed;
-
-    abstract public function configureOptions(OptionsResolver $resolver): void;
+    /**
+     * @throws \Throwable when the order state cannot be persisted (caught by the manager)
+     */
+    public function create(OrderStateDefinition $orderState): void;
 }

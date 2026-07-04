@@ -24,16 +24,25 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings;
+namespace AG\PSModuleUtils\Installer\Tab;
 
-abstract class AbstractSettings
+/**
+ * Port for back-office tab persistence. Keeps TabManager free of PrestaShop's Tab ObjectModel
+ * (and of the deprecated Tab::getIdFromClassName), so its logic stays unit-testable. The sole
+ * adapter (PrestaShopTabGateway) is the only PrestaShop-touching piece, covered by integration.
+ */
+interface TabGatewayInterface
 {
     /**
-     * Hook run after loading, for derived/runtime values. Override when needed;
-     * the default is a no-op so simple settings classes stay boilerplate-free.
+     * @return int|null the tab id, or null if no tab has this class name
      */
-    public function postLoading(): static
-    {
-        return $this;
-    }
+    public function findIdByClassName(string $className): ?int;
+
+    /**
+     * @throws \Throwable when the tab cannot be persisted (TabManager::installTabs() catches it
+     *                    so one failing menu does not abort the install)
+     */
+    public function create(TabDefinition $tab): void;
+
+    public function delete(string $className): void;
 }

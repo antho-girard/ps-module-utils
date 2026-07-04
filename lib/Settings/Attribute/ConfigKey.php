@@ -24,16 +24,18 @@
  *
  */
 
-namespace AG\PSModuleUtils\Settings;
+namespace AG\PSModuleUtils\Settings\Attribute;
 
-abstract class AbstractSettings
+/**
+ * Maps a settings sub-object property to its ps_configuration storage key.
+ *
+ * Placed on the properties of an AbstractSettings class; read by ConfigKeyReader
+ * so the loader/updater know which configuration key holds each sub-object.
+ */
+#[\Attribute(\Attribute::TARGET_PROPERTY)]
+final class ConfigKey
 {
-    /**
-     * Hook run after loading, for derived/runtime values. Override when needed;
-     * the default is a no-op so simple settings classes stay boilerplate-free.
-     */
-    public function postLoading(): static
+    public function __construct(public readonly string $name)
     {
-        return $this;
     }
 }

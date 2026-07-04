@@ -27,77 +27,76 @@
 namespace AG\PSModuleUtils\Utils;
 
 use Alcohol\ISO4217;
+use Money\Converter;
+use Money\Currencies\ISOCurrencies;
 use Money\Currency;
+use Money\CurrencyPair;
+use Money\Exchange\FixedExchange;
+use Money\Exchange\ReversedCurrenciesExchange;
+use Money\Formatter\DecimalMoneyFormatter;
 use Money\Money;
-use PrestaShop\Decimal\DecimalNumber;
-use PrestaShop\Decimal\Operation\Division;
-use PrestaShop\Decimal\Operation\Multiplication;
-use PrestaShop\Decimal\Operation\Rounding;
+use Money\Parser\DecimalMoneyParser;
 
-class AmountOfMoney
+/**
+ * Immutable currency-aware monetary amount.
+ *
+ * Backed solely by moneyphp/money: the value is stored as an integer number of minor units
+ * (no float storage), and every operation — parsing, rounding (HALF_UP), arithmetic and
+ * cross-currency conversion — goes through moneyphp's calculator. ISO 4217 metadata (exponent,
+ * numeric code) comes from alcohol/iso4217.
+ *
+ * All operations return a new instance; arithmetic and comparison between different currencies
+ * throw (moneyphp enforces identical currencies).
+ */
+final class AmountOfMoney
 {
-    private float $amount;
-    private int $amountInCents;
-    private string $currencyCode;
-    private string $currencyNumeric;
-    private int $exp;
-
-    /**
-     * @param mixed[] $currencyDetails
-     */
-    private function __construct(int|float $amount, int $amountInCents, array $currencyDetails)
-    {
-        $this->amount = (float) $amount;
-        $this->amountInCents = (int) $amountInCents;
-        $this->currencyCode = (string) $currencyDetails['alpha3'];
-        $this->currencyNumeric = $currencyDetails['numeric'];
-        $this->exp = $currencyDetails['exp'];
+    private function __construct(
+        private readonly Money $money,
+        private readonly int $exp,
+        private readonly string $currencyNumeric
+    ) {
     }
 
-    /**
-     * @throws \PrestaShop\Decimal\Exception\DivisionByZeroException
-     */
-    public static function fromSmallestUnit(int|float $amountInSmallestUnit, string $currencyCode): self
+    // ---------------------------------------------------------------- Factories
+
+    public static function fromSmallestUnit(int|float|string $amountInSmallestUnit, string $currencyCode): self
     {
-        $iso4217 = new ISO4217();
-        $currencyDetails = $iso4217->getByCode($currencyCode);
-        $exp = pow(10, $currencyDetails['exp']);
+        $details = self::currencyDetails($currencyCode);
+        $money = new Money((int) round((float) $amountInSmallestUnit), new Currency($currencyCode));
 
-        $amountInSmallestUnit = \Tools::ps_round($amountInSmallestUnit);
-        $division = new Division();
-        $amountComputed = $division->compute(new DecimalNumber((string) $amountInSmallestUnit), new DecimalNumber((string) $exp));
-        $amount = $amountComputed->toPrecision($currencyDetails['exp'], Rounding::ROUND_HALF_UP);
-
-        return new self((float) $amount, (int) $amountInSmallestUnit, $currencyDetails);
+        return new self($money, (int) $details['exp'], (string) $details['numeric']);
     }
 
-    public static function fromStandardUnit(int|float $amountInStandardUnit, string $currencyCode): self
+    public static function fromStandardUnit(int|float|string $amountInStandardUnit, string $currencyCode): self
     {
-        $iso4217 = new ISO4217();
-        $currencyDetails = $iso4217->getByCode($currencyCode);
-        $exp = pow(10, $currencyDetails['exp']);
+        $details = self::currencyDetails($currencyCode);
+        $money = self::parser()->parse((string) $amountInStandardUnit, new Currency($currencyCode));
 
-        $amountInStandardUnit = \Tools::ps_round($amountInStandardUnit, $currencyDetails['exp']);
-        $multiplication = new Multiplication();
-        $amountComputed = $multiplication->compute(new DecimalNumber((string) $amountInStandardUnit), new DecimalNumber((string) $exp));
-        $amount = $amountComputed->toPrecision(0);
-
-        return new self($amountInStandardUnit, (int) $amount, $currencyDetails);
+        return new self($money, (int) $details['exp'], (string) $details['numeric']);
     }
+
+    public static function zero(string $currencyCode): self
+    {
+        $details = self::currencyDetails($currencyCode);
+
+        return new self(new Money(0, new Currency($currencyCode)), (int) $details['exp'], (string) $details['numeric']);
+    }
+
+    // ---------------------------------------------------------------- Accessors
 
     public function getAmount(): float
     {
-        return (float) number_format($this->amount, $this->exp, '.', '');
+        return (float) $this->decimalString();
     }
 
-    public function getAmountInCents(): int
+    public function getMinorUnits(): int
     {
-        return (int) $this->amountInCents;
+        return (int) $this->money->getAmount();
     }
 
     public function getCurrencyCode(): string
     {
-        return $this->currencyCode;
+        return $this->money->getCurrency()->getCode();
     }
 
     public function getCurrencyNumeric(): string
@@ -107,87 +106,177 @@ class AmountOfMoney
 
     public function formatPrice(): string
     {
-        return sprintf('%s %s', number_format($this->amount, $this->exp, '.', ''), $this->currencyCode);
+        return sprintf('%s %s', number_format($this->getAmount(), $this->exp, '.', ''), $this->getCurrencyCode());
     }
 
-    public function compare(AmountOfMoney $otherAmountOfMoney): int
-    {
-        $moneyA = new Money($this->amountInCents, new Currency($this->currencyCode));
-        $moneyB = new Money($otherAmountOfMoney->getAmountInCents(), new Currency($otherAmountOfMoney->getCurrencyCode()));
+    // ---------------------------------------------------------------- Arithmetic
 
-        return $moneyA->compare($moneyB);
+    public function add(self ...$others): self
+    {
+        return $this->withMoney($this->money->add(...self::moneys($others)));
+    }
+
+    public function subtract(self ...$others): self
+    {
+        return $this->withMoney($this->money->subtract(...self::moneys($others)));
     }
 
     /**
-     * @param mixed[] $amounts
-     * @throws \PrestaShop\Decimal\Exception\DivisionByZeroException
+     * @param Money::ROUND_* $roundingMode
      */
-    public static function sum(array $amounts, string $currencyCode, bool $inSmallestUnit = false): self
+    public function multiply(int|float|string $factor, int $roundingMode = Money::ROUND_HALF_UP): self
     {
-        $amounts = array_map(
-            fn($item) => $inSmallestUnit ? self::fromSmallestUnit($item, $currencyCode) : self::fromStandardUnit($item, $currencyCode),
-            $amounts
-        );
+        return $this->withMoney($this->money->multiply((string) $factor, $roundingMode));
+    }
 
-        $currency = new Currency($currencyCode);
-        $total = new Money(0, $currency);
-        /** @var AmountOfMoney $amount */
-        foreach ($amounts as $amount) {
-            $addend = new Money($amount->getAmountInCents(), $currency);
-            $total = $total->add($addend);
-        }
-
-        return self::fromSmallestUnit((float) $total->getAmount(), $currencyCode);
+    public function absolute(): self
+    {
+        return $this->withMoney($this->money->absolute());
     }
 
     /**
-     * @throws \PrestaShop\Decimal\Exception\DivisionByZeroException
+     * Distributes the amount according to integer ratios, without losing a minor unit.
+     *
+     * @return array<int, self>
      */
-    public static function subtract(AmountOfMoney $amount1, AmountOfMoney $amount2, string $currencyCode): self
+    public function allocate(int ...$ratios): array
     {
-        $currency = new Currency($currencyCode);
-        $total = new Money($amount1->getAmountInCents(), $currency);
-        $subtract = new Money($amount2->getAmountInCents(), $currency);
-        $result = $total->subtract($subtract);
-
-        return self::fromSmallestUnit((float) $result->getAmount(), $currencyCode);
+        return array_map(fn (Money $m) => $this->withMoney($m), $this->money->allocate($ratios));
     }
 
     /**
-     * Converts the current amount to a target currency by multiplying with the conversion rate.
+     * Splits the amount into N parts, without losing a minor unit.
+     *
+     * @return array<int, self>
+     */
+    public function allocateTo(int $n): array
+    {
+        return array_map(fn (Money $m) => $this->withMoney($m), $this->money->allocateTo($n));
+    }
+
+    /**
+     * Sums two or more amounts of the same currency.
+     */
+    public static function sum(self $first, self ...$rest): self
+    {
+        return $first->add(...$rest);
+    }
+
+    // ---------------------------------------------------------------- Comparison
+
+    public function compare(self $other): int
+    {
+        return $this->money->compare($other->money);
+    }
+
+    public function equals(self $other): bool
+    {
+        return $this->money->equals($other->money);
+    }
+
+    public function greaterThan(self $other): bool
+    {
+        return $this->money->greaterThan($other->money);
+    }
+
+    public function greaterThanOrEqual(self $other): bool
+    {
+        return $this->money->greaterThanOrEqual($other->money);
+    }
+
+    public function lessThan(self $other): bool
+    {
+        return $this->money->lessThan($other->money);
+    }
+
+    public function lessThanOrEqual(self $other): bool
+    {
+        return $this->money->lessThanOrEqual($other->money);
+    }
+
+    // ---------------------------------------------------------------- Predicates
+
+    public function isZero(): bool
+    {
+        return $this->money->isZero();
+    }
+
+    public function isPositive(): bool
+    {
+        return $this->money->isPositive();
+    }
+
+    public function isNegative(): bool
+    {
+        return $this->money->isNegative();
+    }
+
+    // ---------------------------------------------------------------- Conversion
+
+    /**
+     * Converts to a target currency by MULTIPLYING with the conversion rate.
      */
     public function convertTo(string $targetCurrencyCode, int|float $conversionRate): self
     {
-        $iso4217 = new ISO4217();
-        $targetCurrencyDetails = $iso4217->getByCode($targetCurrencyCode);
+        $details = self::currencyDetails($targetCurrencyCode);
 
-        $multiplication = new Multiplication();
-        $convertedAmount = $multiplication->compute(
-            new DecimalNumber((string) $this->amount),
-            new DecimalNumber((string) $conversionRate)
-        );
-        $convertedAmountRounded = $convertedAmount->toPrecision($targetCurrencyDetails['exp'], Rounding::ROUND_HALF_UP);
+        $pair = new CurrencyPair($this->money->getCurrency(), new Currency($targetCurrencyCode), (string) $conversionRate);
+        $converter = new Converter(new ISOCurrencies(), new FixedExchange([]));
+        $converted = $converter->convertAgainstCurrencyPair($this->money, $pair, Money::ROUND_HALF_UP);
 
-        return self::fromStandardUnit((float) $convertedAmountRounded, $targetCurrencyCode);
+        return new self($converted, (int) $details['exp'], (string) $details['numeric']);
     }
 
     /**
-     * Converts the current amount from a source currency by dividing with the conversion rate.
-     *
-     * @throws \PrestaShop\Decimal\Exception\DivisionByZeroException
+     * Converts from a source currency by DIVIDING with the conversion rate.
      */
     public function convertFrom(string $targetCurrencyCode, int|float $conversionRate): self
     {
-        $iso4217 = new ISO4217();
-        $targetCurrencyDetails = $iso4217->getByCode($targetCurrencyCode);
+        $details = self::currencyDetails($targetCurrencyCode);
 
-        $division = new Division();
-        $convertedAmount = $division->compute(
-            new DecimalNumber((string) $this->amount),
-            new DecimalNumber((string) $conversionRate)
+        // 1 target = $conversionRate source; reversing gives the source -> target ratio (1 / rate),
+        // computed exactly by moneyphp's calculator (no float division).
+        $exchange = new ReversedCurrenciesExchange(
+            new FixedExchange([$targetCurrencyCode => [$this->getCurrencyCode() => (string) $conversionRate]])
         );
-        $convertedAmountRounded = $convertedAmount->toPrecision($targetCurrencyDetails['exp'], Rounding::ROUND_HALF_UP);
+        $converter = new Converter(new ISOCurrencies(), $exchange);
+        $converted = $converter->convert($this->money, new Currency($targetCurrencyCode), Money::ROUND_HALF_UP);
 
-        return self::fromStandardUnit((float) $convertedAmountRounded, $targetCurrencyCode);
+        return new self($converted, (int) $details['exp'], (string) $details['numeric']);
+    }
+
+    // ---------------------------------------------------------------- Internals
+
+    private function withMoney(Money $money): self
+    {
+        return new self($money, $this->exp, $this->currencyNumeric);
+    }
+
+    /**
+     * @param array<int, self> $amounts
+     *
+     * @return array<int, Money>
+     */
+    private static function moneys(array $amounts): array
+    {
+        return array_map(fn (self $a) => $a->money, $amounts);
+    }
+
+    /**
+     * @return array{alpha3: string, numeric: string, exp: int, ...}
+     */
+    private static function currencyDetails(string $currencyCode): array
+    {
+        return (new ISO4217())->getByCode($currencyCode);
+    }
+
+    private static function parser(): DecimalMoneyParser
+    {
+        return new DecimalMoneyParser(new ISOCurrencies());
+    }
+
+    private function decimalString(): string
+    {
+        return (new DecimalMoneyFormatter(new ISOCurrencies()))->format($this->money);
     }
 }

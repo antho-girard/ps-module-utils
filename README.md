@@ -13,6 +13,10 @@
 | v1.x (EOL)      | PHP 5.6 or PHP 7.x  | PrestaShop 1.7.x         |
 | v2.x            | PHP 7.2+ or PHP 8.x | PrestaShop 8.x           |
 | v3.x            | PHP 8.1+            | PrestaShop 9.x           |
+| v4.x (beta)     | PHP 8.1 – 8.4       | PrestaShop 9.x           |
+
+> **v4** is a rewrite native to PrestaShop 9 / PHP 8 (attribute-driven configuration). It is
+> currently a pre-release — install it with `composer require anthogirard/ps-module-utils:^4.0@beta`.
 
 ## Installation
 ### Using Composer

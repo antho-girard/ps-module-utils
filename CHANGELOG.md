@@ -83,4 +83,4 @@ Although the API breaks, **stored data stays compatible**: JSON already written 
 v3 in `ps_configuration` still deserializes under v4 as long as property names map
 1:1 to JSON keys (reading tolerates key reordering, missing keys, and unknown keys).
 
-[4.0.0-beta.1]: https://github.com/antho-girard/ps-module-utils/releases/tag/v4.0.0-beta.1
+[4.0.0-beta.1]: https://github.com/antho-girard/ps-module-utils/releases/tag/4.0.0-beta.1

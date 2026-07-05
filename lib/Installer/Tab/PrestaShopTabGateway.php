@@ -41,9 +41,10 @@ final class PrestaShopTabGateway implements TabGatewayInterface
 {
     public function findIdByClassName(string $className): ?int
     {
-        $id = Tab::getIdFromClassName($className);
+        // (int) casts a not-found result (false or 0, depending on the PS minor) to 0.
+        $id = (int) Tab::getIdFromClassName($className);
 
-        return (false === $id || 0 === (int) $id) ? null : (int) $id;
+        return 0 === $id ? null : $id;
     }
 
     /**

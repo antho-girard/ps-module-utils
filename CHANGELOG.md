@@ -5,12 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0-beta.2] - 2026-07-05
+
+### Fixed
+
+- Static analysis on PrestaShop 9.0.0: the back-office Tab id lookup no longer triggers a
+  false-positive strict-comparison error (the not-found result is normalized with an int cast).
+  Runtime behaviour is unchanged.
+
 ## [4.0.0-beta.1] - 2026-07-05
 
 First **pre-release** of the v4 line: a rewrite native to PrestaShop 9 / PHP 8.
 Feature-complete and validated end-to-end on a real PrestaShop 9.0.2 install
-(install/uninstall, the three configuration shapes, back-office form). Public
-documentation is not written yet — hence `beta`.
+(install/uninstall, the three configuration shapes, back-office form). Published
+as `beta` because the API may still change before the stable release and it is not
+yet fully battle-tested. Developer documentation is available in the project wiki.
 
 Consumers must opt in to the pre-release, e.g.
 `composer require anthogirard/ps-module-utils:^4.0@beta`
@@ -83,4 +92,5 @@ Although the API breaks, **stored data stays compatible**: JSON already written 
 v3 in `ps_configuration` still deserializes under v4 as long as property names map
 1:1 to JSON keys (reading tolerates key reordering, missing keys, and unknown keys).
 
+[4.0.0-beta.2]: https://github.com/antho-girard/ps-module-utils/releases/tag/4.0.0-beta.2
 [4.0.0-beta.1]: https://github.com/antho-girard/ps-module-utils/releases/tag/4.0.0-beta.1

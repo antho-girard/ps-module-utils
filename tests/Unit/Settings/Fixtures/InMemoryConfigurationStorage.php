@@ -15,6 +15,9 @@ final class InMemoryConfigurationStorage implements ConfigurationStorageInterfac
     /** @var array<string, string> */
     private array $store = [];
 
+    /** @var list<string> keys written through setGlobal() (for assertions) */
+    public array $globalWrites = [];
+
     public function get(string $key, ?int $idShop = null, ?int $idShopGroup = null): ?string
     {
         return $this->store[$key] ?? null;
@@ -28,5 +31,11 @@ final class InMemoryConfigurationStorage implements ConfigurationStorageInterfac
     public function has(string $key, ?int $idShop = null, ?int $idShopGroup = null): bool
     {
         return isset($this->store[$key]);
+    }
+
+    public function setGlobal(string $key, string $value): void
+    {
+        $this->store[$key] = $value;
+        $this->globalWrites[] = $key;
     }
 }

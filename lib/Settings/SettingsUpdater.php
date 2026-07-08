@@ -39,8 +39,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *   (upgrade script, CLI, arbitrary code) — no controller/Form context required.
  * - persist(): persist without validating. Use when the caller already validated (e.g. a Symfony
  *   Form bound on the settings via data_class), to avoid double validation.
+ * - persistGlobal() / persistFromArrayGlobal(): persist at the all-shops (global) level regardless
+ *   of the current shop context. Use to seed install defaults so they act as the fallback for every
+ *   shop (the context-aware persist() would otherwise write only the install's current shop).
  *
- * Framework-agnostic (depends on the storage port, not on PrestaShop), hence unit-testable.
+ * By default persist()/save() follow the current shop context (per-shop configuration works out of
+ * the box). Framework-agnostic (depends on the storage port, not on PrestaShop), hence unit-testable.
  */
 final class SettingsUpdater
 {
@@ -67,12 +71,40 @@ final class SettingsUpdater
 
     public function persist(AbstractSettings $settings, ?int $idShop = null, ?int $idShopGroup = null): AbstractSettings
     {
-        foreach ($this->reader->read($settings::class) as $binding) {
-            $json = $this->serializer->serialize($settings->{$binding['property']}, 'json');
-            $this->storage->set($binding['key'], $json, $idShop, $idShopGroup);
-        }
+        return $this->write(
+            $settings,
+            fn (string $key, string $json) => $this->storage->set($key, $json, $idShop, $idShopGroup)
+        );
+    }
 
-        return $settings;
+    /**
+     * Persists a SINGLE #[ConfigKey] binding (one section/tab), leaving the others untouched.
+     * Needed for multi-tab configuration pages where each tab saves independently: persist() would
+     * otherwise rewrite every key — and, with the context-aware storage, pin a value that was only
+     * inherited from the global level as a per-shop override.
+     *
+     * @throws \InvalidArgumentException if $property carries no #[ConfigKey] on the settings class
+     */
+    public function persistProperty(AbstractSettings $settings, string $property, ?int $idShop = null, ?int $idShopGroup = null): AbstractSettings
+    {
+        return $this->write(
+            $settings,
+            fn (string $key, string $json) => $this->storage->set($key, $json, $idShop, $idShopGroup),
+            $property
+        );
+    }
+
+    /**
+     * Persists at the all-shops (global) level, without validating. Meant for seeding install
+     * defaults: written globally, they serve as the fallback for every shop (a per-shop context at
+     * install time would otherwise leave the other shops without a default).
+     */
+    public function persistGlobal(AbstractSettings $settings): AbstractSettings
+    {
+        return $this->write(
+            $settings,
+            fn (string $key, string $json) => $this->storage->setGlobal($key, $json)
+        );
     }
 
     /**
@@ -99,6 +131,50 @@ final class SettingsUpdater
     public function persistFromArray(string $settingsClass, array $data, ?int $idShop = null, ?int $idShopGroup = null): AbstractSettings
     {
         return $this->persist($this->denormalize($settingsClass, $data), $idShop, $idShopGroup);
+    }
+
+    /**
+     * Same as persistFromArray() but at the all-shops (global) level — the recommended way to seed
+     * install defaults (see persistGlobal()).
+     *
+     * @param class-string<AbstractSettings> $settingsClass
+     * @param array<string, mixed>           $data
+     */
+    public function persistFromArrayGlobal(string $settingsClass, array $data): AbstractSettings
+    {
+        return $this->persistGlobal($this->denormalize($settingsClass, $data));
+    }
+
+    /**
+     * Serializes each #[ConfigKey] binding to JSON and hands it to $writer(key, json). Shared by
+     * persist(), persistGlobal() and persistProperty(). When $onlyProperty is set, only that binding
+     * is written (and its absence is an error, to catch typos rather than silently no-op).
+     *
+     * @param callable(string, string): void $writer
+     *
+     * @throws \InvalidArgumentException if $onlyProperty has no #[ConfigKey] binding
+     */
+    private function write(AbstractSettings $settings, callable $writer, ?string $onlyProperty = null): AbstractSettings
+    {
+        $matched = false;
+        foreach ($this->reader->read($settings::class) as $binding) {
+            if (null !== $onlyProperty && $binding['property'] !== $onlyProperty) {
+                continue;
+            }
+            $matched = true;
+            $json = $this->serializer->serialize($settings->{$binding['property']}, 'json');
+            $writer($binding['key'], $json);
+        }
+
+        if (null !== $onlyProperty && !$matched) {
+            throw new \InvalidArgumentException(sprintf(
+                'No #[ConfigKey] binding found for property "%s" on %s.',
+                $onlyProperty,
+                $settings::class
+            ));
+        }
+
+        return $settings;
     }
 
     /**

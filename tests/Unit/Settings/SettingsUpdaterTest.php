@@ -7,6 +7,7 @@ use AG\PSModuleUtils\Settings\SettingsFactory;
 use PHPUnit\Framework\TestCase;
 use Tests\AG\PSModuleUtils\Settings\Fixtures\DemoSettings;
 use Tests\AG\PSModuleUtils\Settings\Fixtures\InMemoryConfigurationStorage;
+use Tests\AG\PSModuleUtils\Settings\Fixtures\TwoSectionSettingsFixture;
 
 /**
  * @package Tests\AG\PSModuleUtils\Settings
@@ -101,5 +102,70 @@ class SettingsUpdaterTest extends TestCase
 
         $this->expectException(SettingsValidationException::class);
         $updater->saveFromArray(DemoSettings::class, ['account' => ['apiKey' => '', 'mode' => 'live']]);
+    }
+
+    /**
+     * persistGlobal() routes every #[ConfigKey] binding through the storage's global writer
+     * (all-shops level), not the context-aware set().
+     *
+     * @return void
+     */
+    public function testPersistGlobalWritesAtGlobalLevel(): void
+    {
+        $storage = new InMemoryConfigurationStorage();
+        $updater = SettingsFactory::updater($storage);
+
+        $updater->persistGlobal(new DemoSettings());
+
+        $this->assertSame(['DEMO_SETTINGS_ACCOUNT'], $storage->globalWrites);
+    }
+
+    /**
+     * persistFromArrayGlobal() seeds defaults globally (without validating) — the way an installer
+     * seeds a fallback shared by every shop.
+     *
+     * @return void
+     */
+    public function testPersistFromArrayGlobalSeedsGlobally(): void
+    {
+        $storage = new InMemoryConfigurationStorage();
+        $updater = SettingsFactory::updater($storage);
+
+        $updater->persistFromArrayGlobal(DemoSettings::class, ['account' => ['apiKey' => '', 'mode' => 'test']]);
+
+        $this->assertContains('DEMO_SETTINGS_ACCOUNT', $storage->globalWrites);
+        $decoded = json_decode((string) $storage->get('DEMO_SETTINGS_ACCOUNT'), true);
+        $this->assertSame(['apiKey' => '', 'mode' => 'test'], $decoded);
+    }
+
+    /**
+     * persistProperty() writes only the targeted section's key and leaves the other keys untouched
+     * (so a multi-tab page saving one tab does not rewrite the others).
+     *
+     * @return void
+     */
+    public function testPersistPropertyWritesOnlyTheTargetedKey(): void
+    {
+        $storage = new InMemoryConfigurationStorage();
+        $updater = SettingsFactory::updater($storage);
+
+        $updater->persistProperty(new TwoSectionSettingsFixture(), 'account');
+
+        $this->assertTrue($storage->has('TWO_SECTION_ACCOUNT'), 'targeted key must be written');
+        $this->assertFalse($storage->has('TWO_SECTION_CATALOG'), 'other key must be left untouched');
+    }
+
+    /**
+     * persistProperty() rejects a property that carries no #[ConfigKey], rather than silently
+     * doing nothing (catches typos).
+     *
+     * @return void
+     */
+    public function testPersistPropertyThrowsOnUnknownProperty(): void
+    {
+        $updater = SettingsFactory::updater(new InMemoryConfigurationStorage());
+
+        $this->expectException(\InvalidArgumentException::class);
+        $updater->persistProperty(new TwoSectionSettingsFixture(), 'doesNotExist');
     }
 }

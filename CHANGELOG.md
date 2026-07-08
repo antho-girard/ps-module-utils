@@ -5,6 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0-beta.3] - 2026-07-08
+
+Multistore fixes and finer-grained persistence, from live beta feedback.
+
+### Fixed
+
+- **Multistore: configuration is now shop-context aware.** The storage no longer forces the
+  all-shops (global) level when no shop is passed; it follows the current shop context — mono-shop,
+  group or all-shops — mirroring PrestaShop's native `Configuration::updateValue`. As a result
+  **per-shop configuration works out of the box**, and the back-office shop selector is respected.
+  Reads keep the native shop → group → global fallback.
+
+### Added
+
+- **`SettingsUpdater::persistProperty($settings, $property)`** — persists a single `#[ConfigKey]`
+  section, leaving the others untouched. Needed for multi-tab configuration pages: saving one tab no
+  longer rewrites the other keys (which, with the shop-context storage, would pin globally-inherited
+  values as per-shop overrides). Throws on an unknown property.
+- **`SettingsUpdater::persistGlobal()` / `persistFromArrayGlobal()`** and
+  **`ConfigurationStorageInterface::setGlobal()`** — write at the all-shops (global) level regardless
+  of context. Recommended for seeding install defaults so they act as the fallback for every shop.
+  The contextual `persistFromArray()` remains available when a module wants the defaults to follow
+  the merchant's install scope.
+
 ## [4.0.0-beta.2] - 2026-07-05
 
 ### Fixed
@@ -92,5 +116,6 @@ Although the API breaks, **stored data stays compatible**: JSON already written 
 v3 in `ps_configuration` still deserializes under v4 as long as property names map
 1:1 to JSON keys (reading tolerates key reordering, missing keys, and unknown keys).
 
+[4.0.0-beta.3]: https://github.com/antho-girard/ps-module-utils/releases/tag/4.0.0-beta.3
 [4.0.0-beta.2]: https://github.com/antho-girard/ps-module-utils/releases/tag/4.0.0-beta.2
 [4.0.0-beta.1]: https://github.com/antho-girard/ps-module-utils/releases/tag/4.0.0-beta.1

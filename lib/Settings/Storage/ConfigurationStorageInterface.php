@@ -34,8 +34,11 @@ namespace AG\PSModuleUtils\Settings\Storage;
  * adapter bridging it to the native ShopConfigurationInterface / ShopConstraint.
  *
  * Shop scope is expressed with primitive ids (kept framework-agnostic here); the adapter
- * maps them to a ShopConstraint. A null id targets the current/all-shops context per the
- * adapter's policy.
+ * maps them to a ShopConstraint. When both ids are null the operation targets the CURRENT
+ * shop context (mono-shop, group or all-shops), mirroring PrestaShop's native
+ * Configuration::updateValue — so per-shop configuration works automatically. Use setGlobal()
+ * to force the all-shops (global) level regardless of the current context, e.g. to seed
+ * install defaults that must act as the fallback for every shop.
  */
 interface ConfigurationStorageInterface
 {
@@ -44,4 +47,10 @@ interface ConfigurationStorageInterface
     public function set(string $key, string $value, ?int $idShop = null, ?int $idShopGroup = null): void;
 
     public function has(string $key, ?int $idShop = null, ?int $idShopGroup = null): bool;
+
+    /**
+     * Writes at the all-shops (global) level, whatever the current shop context. In multistore,
+     * reads for a specific shop fall back to this global value when no per-shop override exists.
+     */
+    public function setGlobal(string $key, string $value): void;
 }
